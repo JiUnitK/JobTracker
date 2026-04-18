@@ -1,0 +1,19 @@
+target_titles:
+  - backend engineer
+  - software engineer
+  - platform engineer
+preferred_skills:
+  - python
+  - distributed systems
+  - api design
+  - cloud infrastructure
+preferred_locations:
+  - Austin, TX
+  - Remote
+target_workplace_types:
+  - remote
+  - hybrid
+excluded_keywords:
+  - intern
+  - principal only
+target_companies: []

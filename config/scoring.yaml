@@ -1,0 +1,17 @@
+fit_weights:
+  title_match: 0.4
+  skill_match: 0.3
+  location_match: 0.2
+  seniority_match: 0.1
+  freshness: 0.0
+  source_confidence: 0.0
+hiring_weights:
+  title_match: 0.0
+  skill_match: 0.0
+  location_match: 0.0
+  seniority_match: 0.0
+  freshness: 0.7
+  source_confidence: 0.3
+priority_mix:
+  fit_score: 0.65
+  hiring_score: 0.35

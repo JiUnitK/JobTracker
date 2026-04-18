@@ -1,0 +1,22 @@
+from __future__ import annotations
+
+from typer.testing import CliRunner
+
+from jobtracker.cli.app import app
+
+
+runner = CliRunner()
+
+
+def test_cli_help_smoke() -> None:
+    result = runner.invoke(app, ["--help"])
+
+    assert result.exit_code == 0
+    assert "Track job opportunities" in result.stdout
+
+
+def test_config_validate_command_uses_default_config() -> None:
+    result = runner.invoke(app, ["config", "validate"])
+
+    assert result.exit_code == 0
+    assert "Configuration valid:" in result.stdout

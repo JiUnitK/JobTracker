@@ -1,0 +1,24 @@
+defaults:
+  timeout_seconds: 20
+  max_results_per_query: 100
+sources:
+  - name: greenhouse
+    type: ats
+    enabled: true
+    reliability_tier: tier1
+    base_url: https://boards.greenhouse.io/
+  - name: lever
+    type: ats
+    enabled: true
+    reliability_tier: tier1
+    base_url: https://jobs.lever.co/
+  - name: ashby
+    type: ats
+    enabled: true
+    reliability_tier: tier1
+    base_url: https://jobs.ashbyhq.com/
+  - name: linkedin
+    type: aggregator
+    enabled: false
+    reliability_tier: tier2
+    base_url: https://www.linkedin.com/jobs/

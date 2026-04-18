@@ -1,0 +1,20 @@
+include:
+  - software engineer
+  - backend engineer
+  - platform engineer
+  - python
+  - distributed systems
+exclude:
+  - internship
+  - contractor
+locations:
+  - Austin, TX
+  - Remote
+  - United States
+workplace_types:
+  - remote
+  - hybrid
+  - onsite
+seniority:
+  - mid
+  - senior
