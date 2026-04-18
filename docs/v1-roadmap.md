@@ -4,6 +4,30 @@
 
 Translate the v1 architecture into a concrete implementation plan with milestones, task-level deliverables, and an early testing strategy that reduces regression risk as the project grows.
 
+## Current Status
+
+Overall progress:
+
+- Milestone 0 is complete
+- Milestone 1 is next
+
+Completed so far:
+
+- Python project scaffold under `src/jobtracker`
+- Packaging metadata and editable install support
+- Base CLI entry point with `version` and `config validate`
+- Typed YAML config models and loader
+- Seed config files under `config/`
+- Logging bootstrap
+- Initial `pytest` setup and smoke/config tests
+- Testing guide and repo hygiene files for Windows-friendly development
+
+Current verification baseline:
+
+- `python -m pytest` passes
+- `python -m jobtracker config validate` passes
+- `python -m jobtracker version` passes
+
 ## Roadmap Principles
 
 - Build the core data model before adding many sources
@@ -34,19 +58,23 @@ Objective:
 
 Set up the repository, packaging, configuration loading, CLI skeleton, and testing framework before business logic becomes large.
 
+Status:
+
+- Complete
+
 Deliverables:
 
-- Python project scaffold under `src/jobtracker`
-- Dependency management and project metadata
-- Base CLI entry point
-- Config directory and initial config file structure
-- Logging setup
-- Test framework and test layout
-- CI-ready test command
+- [x] Python project scaffold under `src/jobtracker`
+- [x] Dependency management and project metadata
+- [x] Base CLI entry point
+- [x] Config directory and initial config file structure
+- [x] Logging setup
+- [x] Test framework and test layout
+- [x] CI-ready test command
 
 Concrete tasks:
 
-- Create package structure:
+- [x] Create package structure:
   - `src/jobtracker/cli`
   - `src/jobtracker/config`
   - `src/jobtracker/models`
@@ -55,33 +83,37 @@ Concrete tasks:
   - `src/jobtracker/normalize`
   - `src/jobtracker/scoring`
   - `src/jobtracker/reporting`
-- Add project metadata and dependencies
-- Add `jobtracker --help` CLI command
-- Add config loader with typed config models
-- Add baseline logging configuration
-- Add `pytest` setup
-- Add shared test fixtures
-- Add test command documentation
+- [x] Add project metadata and dependencies
+- [x] Add `jobtracker --help` CLI command
+- [x] Add config loader with typed config models
+- [x] Add baseline logging configuration
+- [x] Add `pytest` setup
+- [x] Add shared test fixtures
+- [x] Add test command documentation
 
 Testing tasks:
 
-- Configure `pytest`
-- Add a basic smoke test for the CLI
-- Add config loader unit tests
-- Add a repository-level testing guide
+- [x] Configure `pytest`
+- [x] Add a basic smoke test for the CLI
+- [x] Add config loader unit tests
+- [x] Add a repository-level testing guide
 
 Exit criteria:
 
-- The project installs and runs locally
-- `pytest` runs successfully
-- The CLI boots successfully
-- Config files load into typed models
+- [x] The project installs and runs locally
+- [x] `pytest` runs successfully
+- [x] The CLI boots successfully
+- [x] Config files load into typed models
 
 ## Milestone 1: Canonical Models and Persistence
 
 Objective:
 
 Define the normalized data model and persist jobs, companies, sources, and run history.
+
+Status:
+
+- Not started
 
 Deliverables:
 
@@ -456,12 +488,12 @@ The first implementation sprint should focus on foundation work that unlocks saf
 
 ### Sprint 1
 
-- Create project scaffold
-- Add dependency and packaging setup
-- Add CLI skeleton
-- Add config models and loader
-- Add `pytest` setup and smoke tests
-- Add test documentation
+- [x] Create project scaffold
+- [x] Add dependency and packaging setup
+- [x] Add CLI skeleton
+- [x] Add config models and loader
+- [x] Add `pytest` setup and smoke tests
+- [x] Add test documentation
 
 ### Sprint 2
 
@@ -527,9 +559,9 @@ Mitigation:
 
 The best next implementation steps are:
 
-1. Scaffold the Python project and package structure
-2. Add `pytest`, shared fixtures, and a smoke-test baseline
-3. Add the CLI skeleton and config loader
-4. Define canonical models and the initial database schema
+1. Define canonical domain models
+2. Add SQLAlchemy models and database session management
+3. Create the initial migration
+4. Add repository tests and SQLite-backed integration tests
 
 This order gives the project a stable base so future source and scoring work can be added without repeatedly backtracking to fix structural issues.
