@@ -41,6 +41,25 @@ class SourceRepository:
         self.session.flush()
         return source
 
+    def mark_success(self, name: str) -> SourceORM:
+        source = self.session.scalar(select(SourceORM).where(SourceORM.name == name))
+        if source is None:
+            raise ValueError(f"Source '{name}' is not registered")
+        source.last_success_at = utc_now()
+        self.session.flush()
+        return source
+
+    def mark_error(self, name: str) -> SourceORM:
+        source = self.session.scalar(select(SourceORM).where(SourceORM.name == name))
+        if source is None:
+            raise ValueError(f"Source '{name}' is not registered")
+        source.last_error_at = utc_now()
+        self.session.flush()
+        return source
+
+    def list_all(self) -> list[SourceORM]:
+        return list(self.session.scalars(select(SourceORM).order_by(SourceORM.name)))
+
 
 class CompanyRepository:
     def __init__(self, session: Session) -> None:

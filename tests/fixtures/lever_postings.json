@@ -1,0 +1,29 @@
+[
+  {
+    "id": "lev-123",
+    "text": "Platform Engineer",
+    "hostedUrl": "https://jobs.lever.co/exampleco/lev-123",
+    "descriptionPlain": "Build Python services and developer infrastructure.",
+    "additionalPlain": "Austin-based hybrid role.",
+    "categories": {
+      "team": "Infrastructure",
+      "department": "Engineering",
+      "location": "Austin, TX",
+      "commitment": "Full-time",
+      "level": "Senior"
+    }
+  },
+  {
+    "id": "lev-999",
+    "text": "Recruiter",
+    "hostedUrl": "https://jobs.lever.co/exampleco/lev-999",
+    "descriptionPlain": "Own recruiting operations.",
+    "categories": {
+      "team": "People",
+      "department": "G&A",
+      "location": "San Francisco, CA",
+      "commitment": "Full-time",
+      "level": "Mid"
+    }
+  }
+]

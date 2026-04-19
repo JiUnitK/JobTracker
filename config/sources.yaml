@@ -7,16 +7,23 @@ sources:
     enabled: true
     reliability_tier: tier1
     base_url: https://boards.greenhouse.io/
+    params:
+      board_tokens: 
+        - stripe
   - name: lever
     type: ats
-    enabled: true
+    enabled: false
     reliability_tier: tier1
     base_url: https://jobs.lever.co/
+    params:
+      account_names: []
   - name: ashby
     type: ats
-    enabled: true
+    enabled: false
     reliability_tier: tier1
     base_url: https://jobs.ashbyhq.com/
+    params:
+      job_board_names: []
   - name: linkedin
     type: aggregator
     enabled: false

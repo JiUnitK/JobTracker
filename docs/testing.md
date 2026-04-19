@@ -29,6 +29,11 @@ The initial scaffold includes:
 - Domain model validation coverage
 - SQLite-backed repository integration coverage
 - Alembic migration smoke coverage
+- Fixture-based Greenhouse adapter parsing coverage
+- Fixture-based Lever adapter parsing coverage
+- Fixture-based Ashby adapter parsing coverage
+- End-to-end run coordinator coverage for success and partial-success paths
+- Cross-source end-to-end coverage across Greenhouse, Lever, and Ashby
 
 ## Expectations for New Work
 

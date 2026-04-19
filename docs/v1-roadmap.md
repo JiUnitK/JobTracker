@@ -10,7 +10,9 @@ Overall progress:
 
 - Milestone 0 is complete
 - Milestone 1 is complete
-- Milestone 2 is next
+- Milestone 2 is complete
+- Milestone 3 is complete
+- Milestone 4 is next
 
 Completed so far:
 
@@ -26,6 +28,12 @@ Completed so far:
 - SQLAlchemy ORM models, repositories, and DB session helpers
 - Alembic migration scaffolding and initial schema migration
 - SQLite-backed persistence tests and migration smoke coverage
+- Source adapter contract, registry, and query planning
+- Greenhouse adapter and run coordinator
+- Adapter fixture tests and end-to-end collection pipeline tests
+- Lever and Ashby adapters
+- Shared source parsing helpers and cross-source integration coverage
+- Source status inspection from the CLI
 
 Current verification baseline:
 
@@ -33,6 +41,8 @@ Current verification baseline:
 - `python -m jobtracker config validate` passes
 - `python -m jobtracker version` passes
 - `python -m jobtracker db upgrade` passes
+- `python -m jobtracker run` passes
+- `python -m jobtracker sources list` passes
 
 ## Roadmap Principles
 
@@ -166,40 +176,44 @@ Objective:
 
 Create the end-to-end ingest flow with one adapter, even if source coverage is still minimal.
 
+Status:
+
+- Complete
+
 Deliverables:
 
-- Source adapter base interface
-- Source registry
-- Search run orchestration
-- Raw fetch to normalized ingest pipeline
-- One working Tier 1 adapter
+- [x] Source adapter base interface
+- [x] Source registry
+- [x] Search run orchestration
+- [x] Raw fetch to normalized ingest pipeline
+- [x] One working Tier 1 adapter
 
 Concrete tasks:
 
-- Define `SourceAdapter` interface
-- Implement source enablement from config
-- Create run coordinator:
+- [x] Define `SourceAdapter` interface
+- [x] Implement source enablement from config
+- [x] Create run coordinator:
   - start `search_run`
   - execute enabled source queries
   - collect errors
   - persist results
   - close `search_run`
-- Implement first adapter:
+- [x] Implement first adapter:
   - recommended first source: Greenhouse
-- Add raw payload capture for observations
-- Add per-source logging and error reporting
+- [x] Add raw payload capture for observations
+- [x] Add per-source logging and error reporting
 
 Testing tasks:
 
-- Adapter fixture-based parser tests
-- Pipeline integration test from mocked adapter output to database rows
-- Run summary test for successful and partial-failure cases
+- [x] Adapter fixture-based parser tests
+- [x] Pipeline integration test from mocked adapter output to database rows
+- [x] Run summary test for successful and partial-failure cases
 
 Exit criteria:
 
-- `jobtracker run` executes one real source
-- A run creates jobs, companies, observations, and run metadata
-- Parser fixtures protect the first adapter from regressions
+- [x] `jobtracker run` executes one real source
+- [x] A run creates jobs, companies, observations, and run metadata
+- [x] Parser fixtures protect the first adapter from regressions
 
 ## Milestone 3: Structured Source Expansion
 
@@ -207,34 +221,38 @@ Objective:
 
 Add a few reliable sources while keeping adapters isolated and thoroughly tested.
 
+Status:
+
+- Complete
+
 Deliverables:
 
-- Lever adapter
-- Ashby adapter
-- Shared parsing helpers where appropriate
-- Source-level metrics and health visibility
+- [x] Lever adapter
+- [x] Ashby adapter
+- [x] Shared parsing helpers where appropriate
+- [x] Source-level metrics and health visibility
 
 Concrete tasks:
 
-- Implement Lever adapter
-- Implement Ashby adapter
-- Factor reusable parsing helpers without over-coupling adapters
-- Add source metadata updates:
+- [x] Implement Lever adapter
+- [x] Implement Ashby adapter
+- [x] Factor reusable parsing helpers without over-coupling adapters
+- [x] Add source metadata updates:
   - `last_success_at`
   - `last_error_at`
-- Add command to list source health/status
+- [x] Add command to list source health/status
 
 Testing tasks:
 
-- Fixture suites for Lever and Ashby
-- Cross-source normalization tests
-- Source health/status tests
+- [x] Fixture suites for Lever and Ashby
+- [x] Cross-source normalization tests
+- [x] Source health/status tests
 
 Exit criteria:
 
-- At least three structured sources run end-to-end
-- Adapter tests cover expected extraction behavior
-- Source health is visible in the CLI
+- [x] At least three structured sources run end-to-end
+- [x] Adapter tests cover expected extraction behavior
+- [x] Source health is visible in the CLI
 
 ## Milestone 4: Normalization and Deduplication
 
@@ -511,11 +529,11 @@ The first implementation sprint should focus on foundation work that unlocks saf
 
 ### Sprint 3
 
-- Add source adapter interface and registry
-- Add run coordinator
-- Implement Greenhouse adapter
-- Add fixture-based parser tests
-- Add end-to-end ingest test
+- [x] Add source adapter interface and registry
+- [x] Add run coordinator
+- [x] Implement Greenhouse adapter
+- [x] Add fixture-based parser tests
+- [x] Add end-to-end ingest test
 
 ## Definition of Done for Each Task
 
@@ -565,9 +583,9 @@ Mitigation:
 
 The best next implementation steps are:
 
-1. Define the source adapter interface and source registry
-2. Add search run orchestration across enabled sources
-3. Implement the first Tier 1 adapter, starting with Greenhouse
-4. Add fixture-based parser tests and a pipeline integration test
+1. Add normalization helpers for company names, job titles, workplace type, dates, and salary fields
+2. Implement canonical key generation improvements and primary dedupe rules
+3. Add secondary dedupe heuristics and preferred-source selection
+4. Add normalization and deduplication regression tests
 
 This order gives the project a stable base so future source and scoring work can be added without repeatedly backtracking to fix structural issues.

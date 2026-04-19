@@ -1,0 +1,51 @@
+{
+  "jobs": [
+    {
+      "id": 101,
+      "title": "Backend Engineer",
+      "absolute_url": "https://boards.greenhouse.io/exampleco/jobs/101",
+      "updated_at": "2026-04-17T20:30:00Z",
+      "location": {
+        "name": "Austin, TX"
+      },
+      "content": "Build backend systems with Python and distributed services.",
+      "metadata": [
+        {
+          "name": "Employment Type",
+          "value": "Full-time"
+        },
+        {
+          "name": "Experience Level",
+          "value": "Senior"
+        }
+      ],
+      "departments": [
+        {
+          "name": "Engineering"
+        }
+      ],
+      "offices": [
+        {
+          "name": "Austin"
+        }
+      ]
+    },
+    {
+      "id": 202,
+      "title": "Product Designer",
+      "absolute_url": "https://boards.greenhouse.io/exampleco/jobs/202",
+      "updated_at": "2026-04-17T21:00:00Z",
+      "location": {
+        "name": "New York, NY"
+      },
+      "content": "Design product interfaces and visual systems.",
+      "metadata": [],
+      "departments": [
+        {
+          "name": "Design"
+        }
+      ],
+      "offices": []
+    }
+  ]
+}

@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, HttpUrl, model_validator
+
+from jobtracker.models.domain import SourceType
 
 
 WorkplaceType = Literal["remote", "hybrid", "onsite"]
@@ -20,15 +22,19 @@ class SearchTermsConfig(BaseModel):
 
 class SourceDefinition(BaseModel):
     name: str
-    type: str
+    type: SourceType
     enabled: bool = True
     reliability_tier: ReliabilityTier
     base_url: HttpUrl | None = None
+    params: dict[str, Any] = Field(default_factory=dict)
 
 
 class SourcesConfig(BaseModel):
     defaults: dict[str, int | float | str | bool] = Field(default_factory=dict)
     sources: list[SourceDefinition] = Field(default_factory=list)
+
+    def enabled_sources(self) -> list[SourceDefinition]:
+        return [source for source in self.sources if source.enabled]
 
 
 class ScoringWeights(BaseModel):

@@ -25,6 +25,24 @@ Create or upgrade the local database schema:
 python -m jobtracker db upgrade
 ```
 
+Add one or more Greenhouse board tokens in `config/sources.yaml`, then run collection:
+
+```powershell
+python -m jobtracker run
+```
+
+Inspect source status and adapter coverage:
+
+```powershell
+python -m jobtracker sources list
+```
+
+Configure source identifiers in `config/sources.yaml`:
+
+- `greenhouse.params.board_tokens`: Greenhouse board tokens such as `stripe`
+- `lever.params.account_names`: Lever account names used in `https://api.lever.co/v0/postings/{account}`
+- `ashby.params.job_board_names`: Ashby job board names used in `https://api.ashbyhq.com/posting-api/job-board/{name}`
+
 Run the test suite:
 
 ```powershell
