@@ -535,19 +535,17 @@ For adapters, fixture-based testing is important because it reduces accidental p
 jobtracker/
   src/jobtracker/
     cli/
+    job_tracking/
+      normalize/
+      scoring/
+      sources/
+    company_discovery/
     config/
-    sources/
-      base.py
-      greenhouse.py
-      lever.py
-      ashby.py
-    normalize/
-    scoring/
     storage/
     models/
     reporting/
   tests/
-    adapters/
+    sources/
     normalize/
     scoring/
     integration/

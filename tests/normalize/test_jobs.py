@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from jobtracker.models import RawJobPosting
-from jobtracker.normalize import (
+from jobtracker.job_tracking.normalize import (
     build_canonical_key,
     normalize_company_name,
     normalize_job_title,

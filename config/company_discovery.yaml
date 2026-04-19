@@ -1,0 +1,42 @@
+defaults:
+  max_results_per_query: 50
+  resolution_confidence: 0.7
+scoring:
+  fit_weights:
+    title_match: 0.4
+    skill_match: 0.25
+    location_match: 0.35
+    repeated_appearance: 0.0
+    ats_confidence: 0.0
+    fresh_evidence: 0.0
+  hiring_weights:
+    title_match: 0.0
+    skill_match: 0.0
+    location_match: 0.0
+    repeated_appearance: 0.35
+    ats_confidence: 0.35
+    fresh_evidence: 0.3
+  priority_mix:
+    fit_score: 0.5
+    hiring_score: 0.5
+queries:
+  - keywords:
+      - software engineer
+      - backend engineer
+    locations:
+      - Austin, TX
+      - Remote
+    workplace_types:
+      - remote
+      - hybrid
+sources:
+  - name: company_search
+    type: search
+    enabled: false
+    params:
+      results: []
+  - name: austin_ecosystem
+    type: ecosystem
+    enabled: false
+    params:
+      entries: []

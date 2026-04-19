@@ -9,6 +9,9 @@ from pydantic import BaseModel, Field, HttpUrl, field_validator, model_validator
 WorkplaceType = Literal["remote", "hybrid", "onsite", "unknown"]
 JobStatus = Literal["active", "stale", "closed", "unknown"]
 SourceType = Literal["ats", "aggregator", "company_page", "enrichment", "other"]
+DiscoverySourceType = Literal["search", "ecosystem", "ats_pattern", "aggregator", "other"]
+DiscoveryStatus = Literal["candidate", "watch", "tracked", "ignored", "archived"]
+ResolutionStatus = Literal["unresolved", "partial", "resolved", "conflicted"]
 
 
 class SearchQuery(BaseModel):
@@ -40,6 +43,68 @@ class CompanyRecord(BaseModel):
         cleaned = value.strip()
         if not cleaned:
             raise ValueError("Company names cannot be empty")
+        return cleaned
+
+
+class CompanyDiscoveryQuery(BaseModel):
+    keywords: list[str] = Field(default_factory=list)
+    locations: list[str] = Field(default_factory=list)
+    workplace_types: list[WorkplaceType] = Field(default_factory=list)
+    source_names: list[str] = Field(default_factory=list)
+
+    @field_validator("keywords")
+    @classmethod
+    def validate_keywords(cls, value: list[str]) -> list[str]:
+        cleaned = [item.strip() for item in value if item.strip()]
+        if not cleaned:
+            raise ValueError("At least one keyword is required")
+        return cleaned
+
+
+class RawCompanyDiscovery(BaseModel):
+    source_name: str
+    source_type: DiscoverySourceType = "other"
+    source_url: HttpUrl
+    company_name: str
+    company_url: HttpUrl | None = None
+    careers_url: HttpUrl | None = None
+    job_url: HttpUrl | None = None
+    job_title: str | None = None
+    location_text: str | None = None
+    workplace_type: WorkplaceType = "unknown"
+    evidence_kind: str = "company_mention"
+    raw_payload: dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("source_name", "company_name", "evidence_kind")
+    @classmethod
+    def validate_required_text(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Value cannot be empty")
+        return cleaned
+
+
+class NormalizedCompanyDiscovery(BaseModel):
+    source_name: str
+    normalized_name: str
+    display_name: str
+    source_url: HttpUrl
+    company_url: HttpUrl | None = None
+    careers_url: HttpUrl | None = None
+    job_url: HttpUrl | None = None
+    job_title: str | None = None
+    location_text: str | None = None
+    workplace_type: WorkplaceType = "unknown"
+    evidence_kind: str = "company_mention"
+    discovery_status: DiscoveryStatus = "candidate"
+    resolution_status: ResolutionStatus = "unresolved"
+
+    @field_validator("source_name", "normalized_name", "display_name", "evidence_kind")
+    @classmethod
+    def validate_required_text(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Value cannot be empty")
         return cleaned
 
 

@@ -7,13 +7,13 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from jobtracker.config.loader import load_app_config
-from jobtracker.normalize import normalize_raw_job
-from jobtracker.sources.base import SourceAdapter
-from jobtracker.sources.ashby import AshbyAdapter
-from jobtracker.sources.greenhouse import GreenhouseAdapter
-from jobtracker.sources.lever import LeverAdapter
-from jobtracker.sources.registry import SourceRegistry
-from jobtracker.sources.runner import RunCoordinator
+from jobtracker.job_tracking.normalize import normalize_raw_job
+from jobtracker.job_tracking.sources.base import SourceAdapter
+from jobtracker.job_tracking.sources.ashby import AshbyAdapter
+from jobtracker.job_tracking.sources.greenhouse import GreenhouseAdapter
+from jobtracker.job_tracking.sources.lever import LeverAdapter
+from jobtracker.job_tracking.sources.registry import SourceRegistry
+from jobtracker.job_tracking.sources.runner import RunCoordinator
 from jobtracker.storage import JobObservationORM, JobORM, SearchRunORM, SourceORM, create_db_engine, get_database_settings
 
 

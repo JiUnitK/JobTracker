@@ -19,6 +19,8 @@ Use this checklist when validating the documented JobTracker workflow.
 ## Weekly Loop
 
 - There is a clear shortlist command for weekly review
+- There is a clear command for reviewing discovered companies
+- The workflow shows how to resolve and promote promising discoveries
 - There is a CSV export path for deeper review
 - There is a Markdown export path for compact snapshots
 - The workflow explains when to update profile, source, and scoring config
@@ -29,6 +31,7 @@ Use this checklist when validating the documented JobTracker workflow.
 - The output is readable without extra post-processing
 - The documented workflow does not require awkward manual database inspection
 - The score interpretation guidance is concrete enough to use in practice
+- The discovery workflow makes it obvious how a company moves from candidate to tracked
 
 ## Follow-up
 

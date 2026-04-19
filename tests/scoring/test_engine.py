@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from jobtracker.config.loader import load_app_config
 from jobtracker.config.models import AppConfig
 from jobtracker.models import CompanyRecord, NormalizedJobPosting, RawJobPosting
-from jobtracker.scoring import ScoringService
+from jobtracker.job_tracking.scoring import ScoringService
 from jobtracker.storage import (
     JobObservationRepository,
     JobRepository,

@@ -18,6 +18,12 @@ Overall progress:
 - Milestone 7 is complete
 - Milestone 8A is complete
 - Milestone 8B is next
+- Company Discovery Track is planned
+- Workflow boundary refactor for discovery is complete
+- Milestone D1 is complete
+- Milestone D2 is complete
+- Milestone D3 is complete
+- Milestone D4 is complete
 
 Completed so far:
 
@@ -47,6 +53,12 @@ Completed so far:
 - Score explanation payloads and scoring-focused regression coverage
 - Reporting CLI for jobs, companies, CSV, and Markdown exports
 - Daily/weekly workflow documentation and workflow-oriented reporting refinements
+- A stable foundation that can support a separate company discovery workflow without reworking the current job-tracking pipeline
+- Workflow-specific job collection code reorganized under `src/jobtracker/job_tracking` to make room for a sibling `company_discovery` package
+- Company discovery foundation with config, schema, repositories, runner skeleton, and CLI command
+- Two config-driven company discovery adapters with fixture coverage and end-to-end persistence tests
+- Discovery scoring, resolution-state handling, and CLI review commands for discovered companies
+- Promotion, ignore, and resolution acceptance workflow wired into tracked monitoring
 
 Current verification baseline:
 
@@ -80,6 +92,7 @@ Recommended sequencing:
 6. Scoring
 7. Reporting and exports
 8. Hardening and expansion
+9. Company discovery
 
 ## Milestone 0: Project Foundation
 
@@ -518,6 +531,201 @@ Exit criteria:
 - The tool is reliable enough for unattended periodic runs
 - Developers can add or debug sources with reasonable effort
 
+## Company Discovery Track
+
+Objective:
+
+Extend JobTracker so it can discover promising companies in Austin and remote markets, not just monitor companies that are already known.
+
+Design reference:
+
+- See [company-discovery-design.md](/abs/path/F:/Projects/JobTracker/docs/company-discovery-design.md)
+
+Prerequisite status:
+
+- [x] Job-tracking workflow code has been separated behind `job_tracking` package boundaries before discovery implementation begins
+
+Guiding principles:
+
+- Keep discovery and tracked-job collection as separate but connected workflows
+- Preserve the current ATS-first tracking path
+- Make promotion from discovered company to tracked company explicit
+- Keep discovery evidence and scoring transparent
+
+### Milestone D1: Discovery Foundation
+
+Objective:
+
+Create the data model, configuration, and run orchestration for company discovery.
+
+Status:
+
+- Complete
+
+Deliverables:
+
+- [x] Discovery config model and file
+- [x] Company discovery domain models
+- [x] Discovery persistence schema
+- [x] Discovery adapter base interface and registry
+- [x] Discovery run coordinator
+
+Concrete tasks:
+
+- [x] Add `config/company_discovery.yaml`
+- [x] Add typed config models for discovery settings
+- [x] Define domain models:
+  - `CompanyDiscoveryQuery`
+  - `RawCompanyDiscovery`
+  - `NormalizedCompanyDiscovery`
+- [x] Add ORM tables:
+  - `company_discoveries`
+  - `company_discovery_observations`
+  - `company_resolutions`
+- [x] Add migration for discovery tables
+- [x] Add discovery repository methods
+- [x] Add discovery runner and registry wiring
+- [x] Add initial CLI entry point:
+  - `jobtracker discover companies run`
+
+Testing tasks:
+
+- [x] Config loader tests for discovery config
+- [x] Model validation tests for discovery entities
+- [x] Repository integration tests for discovery inserts and updates
+- [x] Discovery run smoke test
+- [x] CLI smoke test for discovery run wiring
+
+Exit criteria:
+
+- [x] The schema supports discovered companies and discovery evidence
+- [x] A discovery run can start, persist data, and complete cleanly
+- [x] Discovery config loads through the existing config system
+
+### Milestone D2: First Discovery Sources
+
+Objective:
+
+Collect initial company candidates from sources meant for discovery rather than durable job tracking.
+
+Status:
+
+- Complete
+
+Deliverables:
+
+- [x] One search-driven discovery adapter
+- [x] One ecosystem or ATS-pattern discovery adapter
+- [x] Basic normalization for discovered company evidence
+
+Concrete tasks:
+
+- [x] Implement the first search-driven discovery adapter
+- [x] Implement one additional discovery source:
+  - ecosystem-list source, or
+  - ATS-pattern source
+- [x] Add shared parsing helpers where useful
+- [x] Normalize company name, source URL, and careers URL fields
+- [x] Persist raw discovery evidence
+
+Testing tasks:
+
+- [x] Fixture tests for each discovery adapter
+- [x] Integration test from adapter output to discovery tables
+- [x] Repeated-evidence merge test for the same discovered company
+
+Exit criteria:
+
+- [x] At least two discovery sources can run end-to-end
+- [x] Discovery evidence is persisted and queryable
+- [x] Adapter fixtures protect extraction behavior
+
+### Milestone D3: Resolution and Company Discovery Scoring
+
+Objective:
+
+Resolve promising companies into careers surfaces and rank them for review.
+
+Status:
+
+- Complete
+
+Deliverables:
+
+- [x] Resolution logic for ATS or direct careers surfaces
+- [x] Discovery-specific scoring model
+- [x] Discovery review outputs
+
+Concrete tasks:
+
+- [x] Implement company resolution states:
+  - unresolved
+  - partial
+  - resolved
+  - conflicted
+- [x] Add resolution persistence and selection rules
+- [x] Implement company discovery score signals:
+  - fit relevance
+  - hiring momentum
+  - repeated appearance
+  - ATS confidence
+- [x] Persist score payloads and reasons
+- [x] Add CLI commands:
+  - `jobtracker discover companies list`
+  - `jobtracker discover companies top`
+
+Testing tasks:
+
+- [x] Resolution heuristic unit tests
+- [x] Discovery scoring unit tests
+- [x] CLI tests for discovery review commands
+- [x] Integration test for discovery score persistence
+
+Exit criteria:
+
+- [x] High-priority discovered companies can be reviewed from the CLI
+- [x] Resolution state is visible and test-covered
+- [x] Discovery scores are explainable and stable under test
+
+### Milestone D4: Promotion Workflow
+
+Objective:
+
+Turn discovered companies into tracked companies with minimal manual friction and clear traceability.
+
+Status:
+
+- Complete
+
+Deliverables:
+
+- [x] Promotion and ignore workflow
+- [x] Resolution acceptance workflow
+- [x] Documentation for using discovery in the weekly routine
+
+Concrete tasks:
+
+- [x] Add CLI commands:
+  - `jobtracker discover companies promote`
+  - `jobtracker discover companies ignore`
+  - `jobtracker discover companies resolve`
+- [x] Attach promoted discoveries to canonical companies
+- [x] Create or update tracked source configuration or DB-backed source records
+- [x] Mark promoted companies as tracked
+- [x] Update workflow docs with discovery review and promotion steps
+
+Testing tasks:
+
+- [x] Promotion workflow integration tests
+- [x] CLI tests for promote/ignore actions
+- [x] Documentation checklist for the discovery workflow
+
+Exit criteria:
+
+- [x] A discovered company can be promoted into tracked monitoring
+- [x] Promotion preserves evidence and selected resolution data
+- [x] The documented workflow covers discovery review through promotion
+
 ## Cross-Cutting Testing Plan
 
 Testing needs to exist from the beginning and grow with each milestone.
@@ -550,6 +758,8 @@ Integration tests:
 - end-to-end run execution with mocked adapters
 - multi-run lifecycle behavior
 - persistence and query behavior
+- end-to-end discovery run behavior
+- promotion from discovered company to tracked company
 
 CLI tests:
 
@@ -568,6 +778,7 @@ Recommended order:
 3. Add parser fixture tests with the first adapter in Milestone 2
 4. Add repeated-run integration tests before scoring in Milestone 5
 5. Add golden tests when scoring is introduced in Milestone 6
+6. Add discovery integration and promotion tests with the first discovery milestone
 
 ### Suggested quality gates
 
@@ -652,13 +863,30 @@ Mitigation:
 - Add migrations early
 - Keep milestones narrow and vertical
 
+### Risk: Noisy company discovery
+
+Mitigation:
+
+- Keep discovery sources separate from tracked ATS sources
+- Score discovery candidates conservatively
+- Require explicit promotion into tracked monitoring
+- Preserve source evidence for review
+
+### Risk: Incorrect company resolution
+
+Mitigation:
+
+- Add explicit resolution states and confidence
+- Prefer unresolved over incorrect automatic attachment
+- Test promotion and resolution flows with realistic fixtures
+
 ## Recommended Immediate Next Steps
 
 The best next implementation steps are:
 
-1. Define the recommended daily and weekly JobTracker workflow
-2. Add any missing commands or exports needed to support that workflow cleanly
-3. Write practical workflow documentation around review, triage, and follow-up
-4. Use that workflow in practice before prioritizing Milestone 8B hardening work
+1. Review and confirm the company discovery design in [company-discovery-design.md](/abs/path/F:/Projects/JobTracker/docs/company-discovery-design.md)
+2. Use the discovery workflow in practice and capture the friction points it exposes
+3. Decide whether the next priority is broader discovery coverage or Milestone 8B hardening
+4. Keep new source breadth behind actual workflow value rather than speculative coverage
 
 This order gives the project a stable base so future source and scoring work can be added without repeatedly backtracking to fix structural issues.

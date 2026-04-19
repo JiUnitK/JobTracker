@@ -1,0 +1,28 @@
+[
+  {
+    "source_url": "https://example-search.com/results/pulse",
+    "company_name": "Pulse Labs",
+    "company_url": "https://pulselabs.dev",
+    "careers_url": "https://boards.greenhouse.io/pulselabs",
+    "job_url": "https://boards.greenhouse.io/pulselabs/jobs/101",
+    "job_title": "Backend Engineer",
+    "location_text": "Austin, TX",
+    "workplace_type": "hybrid",
+    "snippet": "Distributed systems and platform work in Austin.",
+    "tags": ["python", "platform"],
+    "evidence_kind": "job_result"
+  },
+  {
+    "source_url": "https://example-search.com/results/quietco",
+    "company_name": "QuietCo",
+    "company_url": "https://quietco.dev",
+    "careers_url": "https://quietco.dev/careers",
+    "job_url": "https://quietco.dev/careers/backend",
+    "job_title": "Frontend Engineer",
+    "location_text": "New York, NY",
+    "workplace_type": "onsite",
+    "snippet": "Frontend role far from Austin.",
+    "tags": ["react"],
+    "evidence_kind": "job_result"
+  }
+]

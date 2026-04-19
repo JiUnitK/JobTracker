@@ -8,7 +8,7 @@ from pathlib import Path
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from jobtracker.storage.orm import CompanyORM, JobORM
+from jobtracker.storage.orm import CompanyDiscoveryORM, CompanyORM, JobORM
 from jobtracker.storage.repositories import CompanyActivityRepository, to_utc_naive
 
 
@@ -27,6 +27,18 @@ class JobReportFilters:
     sort_by: str = "priority"
 
 
+@dataclass(slots=True)
+class CompanyDiscoveryReportFilters:
+    location: str | None = None
+    remote_only: bool = False
+    recent_days: int | None = None
+    min_score: int | None = None
+    discovery_status: str | None = None
+    resolution_status: str | None = None
+    limit: int = 20
+    sort_by: str = "discovery"
+
+
 def _sort_key(job: JobORM, sort_by: str) -> tuple:
     if sort_by == "fit":
         return (job.fit_score or 0, job.priority_score or 0, job.id)
@@ -35,6 +47,20 @@ def _sort_key(job: JobORM, sort_by: str) -> tuple:
     if sort_by == "recent":
         return (to_utc_naive(job.last_seen_at) or datetime.min, job.priority_score or 0, job.id)
     return (job.priority_score or 0, job.fit_score or 0, job.id)
+
+
+def _discovery_sort_key(discovery: CompanyDiscoveryORM, sort_by: str) -> tuple:
+    if sort_by == "fit":
+        return (discovery.fit_score or 0, discovery.discovery_score or 0, discovery.id)
+    if sort_by == "hiring":
+        return (discovery.hiring_score or 0, discovery.discovery_score or 0, discovery.id)
+    if sort_by == "recent":
+        return (
+            to_utc_naive(discovery.last_discovered_at) or datetime.min,
+            discovery.discovery_score or 0,
+            discovery.id,
+        )
+    return (discovery.discovery_score or 0, discovery.fit_score or 0, discovery.id)
 
 
 class ReportingService:
@@ -66,6 +92,17 @@ class ReportingService:
             reverse=True,
         )
         return summaries[:limit]
+
+    def list_discovered_companies(
+        self,
+        filters: CompanyDiscoveryReportFilters,
+    ) -> list[CompanyDiscoveryORM]:
+        discoveries = list(
+            self.session.scalars(select(CompanyDiscoveryORM).order_by(CompanyDiscoveryORM.id))
+        )
+        filtered = [item for item in discoveries if self._discovery_matches(item, filters)]
+        filtered.sort(key=lambda item: _discovery_sort_key(item, filters.sort_by), reverse=True)
+        return filtered[: filters.limit]
 
     def export_jobs_csv(self, output_path: Path, filters: JobReportFilters) -> None:
         jobs = self.list_jobs(filters)
@@ -130,3 +167,34 @@ class ReportingService:
             "priority_score": job.priority_score or 0,
             "best_source_url": job.best_source_url or "",
         }
+
+    def _discovery_matches(
+        self,
+        discovery: CompanyDiscoveryORM,
+        filters: CompanyDiscoveryReportFilters,
+    ) -> bool:
+        payload = discovery.score_payload if isinstance(discovery.score_payload, dict) else {}
+        location_text = " ".join(
+            str(item)
+            for item in [
+                payload.get("primary_location"),
+                payload.get("primary_workplace_type"),
+            ]
+            if item
+        ).lower()
+        if filters.location and filters.location.lower() not in location_text:
+            return False
+        if filters.remote_only and "remote" not in location_text:
+            return False
+        if filters.min_score is not None and (discovery.discovery_score or 0) < filters.min_score:
+            return False
+        if filters.discovery_status and (discovery.discovery_status or "").lower() != filters.discovery_status.lower():
+            return False
+        if filters.resolution_status and (discovery.resolution_status or "").lower() != filters.resolution_status.lower():
+            return False
+        if filters.recent_days is not None:
+            cutoff = to_utc_naive(utc_now() - timedelta(days=filters.recent_days))
+            last_seen = to_utc_naive(discovery.last_discovered_at)
+            if last_seen is None or cutoff is None or last_seen < cutoff:
+                return False
+        return True

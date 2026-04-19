@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from jobtracker.config.models import AppConfig
-from jobtracker.normalize import normalize_job_title
+from jobtracker.job_tracking.normalize import normalize_job_title
 from jobtracker.storage.orm import CompanyORM, JobObservationORM, JobORM
 
 

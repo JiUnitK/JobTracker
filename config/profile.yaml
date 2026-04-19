@@ -2,6 +2,7 @@ target_titles:
   - backend engineer
   - software engineer
   - platform engineer
+  - embedded systems engineer
 preferred_skills:
   - python
   - distributed systems

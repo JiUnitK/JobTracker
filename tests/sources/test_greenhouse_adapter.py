@@ -5,7 +5,7 @@ from pathlib import Path
 
 from jobtracker.config.models import SourceDefinition
 from jobtracker.models import SearchQuery
-from jobtracker.sources.greenhouse import GreenhouseAdapter
+from jobtracker.job_tracking.sources.greenhouse import GreenhouseAdapter
 
 
 def test_greenhouse_adapter_parses_and_filters_jobs() -> None:

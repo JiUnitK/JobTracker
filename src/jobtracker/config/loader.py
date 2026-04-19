@@ -7,6 +7,7 @@ import yaml
 
 from jobtracker.config.models import (
     AppConfig,
+    CompanyDiscoveryConfig,
     ProfileConfig,
     ScoringConfig,
     SearchTermsConfig,
@@ -25,17 +26,27 @@ def load_yaml_file(path: Path) -> dict[str, Any]:
     return data
 
 
+def load_optional_yaml_file(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+    return load_yaml_file(path)
+
+
 def load_app_config(config_dir: Path) -> AppConfig:
     """Load and validate all config files from a directory."""
     search_terms = SearchTermsConfig.model_validate(
         load_yaml_file(config_dir / "search_terms.yaml")
     )
     sources = SourcesConfig.model_validate(load_yaml_file(config_dir / "sources.yaml"))
+    company_discovery = CompanyDiscoveryConfig.model_validate(
+        load_optional_yaml_file(config_dir / "company_discovery.yaml")
+    )
     scoring = ScoringConfig.model_validate(load_yaml_file(config_dir / "scoring.yaml"))
     profile = ProfileConfig.model_validate(load_yaml_file(config_dir / "profile.yaml"))
     return AppConfig(
         search_terms=search_terms,
         sources=sources,
+        company_discovery=company_discovery,
         scoring=scoring,
         profile=profile,
     )

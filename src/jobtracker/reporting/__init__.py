@@ -1,5 +1,9 @@
 """Reporting package."""
 
-from jobtracker.reporting.service import JobReportFilters, ReportingService
+from jobtracker.reporting.service import (
+    CompanyDiscoveryReportFilters,
+    JobReportFilters,
+    ReportingService,
+)
 
-__all__ = ["JobReportFilters", "ReportingService"]
+__all__ = ["CompanyDiscoveryReportFilters", "JobReportFilters", "ReportingService"]

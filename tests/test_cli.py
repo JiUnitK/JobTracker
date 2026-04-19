@@ -20,3 +20,13 @@ def test_config_validate_command_uses_default_config() -> None:
 
     assert result.exit_code == 0
     assert "Configuration valid:" in result.stdout
+
+
+def test_company_discovery_run_command_uses_default_config(sqlite_database_url: str) -> None:
+    result = runner.invoke(
+        app,
+        ["discover", "companies", "run", "--database-url", sqlite_database_url],
+    )
+
+    assert result.exit_code == 0
+    assert "Discovery run complete:" in result.stdout

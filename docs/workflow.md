@@ -143,7 +143,41 @@ python -m jobtracker companies list --recent-days 30 --limit 25
 
 This is where company-level tracking becomes especially useful.
 
-### 4. Export a weekly snapshot
+### 4. Review new company discoveries
+
+```powershell
+python -m jobtracker discover companies top --limit 15
+python -m jobtracker discover companies list --resolution-status resolved --limit 20
+```
+
+Suggested questions:
+
+- Which newly discovered companies look worth tracking even if no single job is perfect yet?
+- Which discoveries already have a strong ATS resolution and can move into monitoring?
+- Which companies should be ignored so they stop taking review time?
+
+### 5. Promote or ignore discoveries
+
+If a company looks promising and already resolves to Greenhouse, Lever, or Ashby, promote it into tracked monitoring:
+
+```powershell
+python -m jobtracker discover companies promote --company "Pulse Labs"
+```
+
+If a discovery has multiple competing resolutions, explicitly choose one first:
+
+```powershell
+python -m jobtracker discover companies resolve --company "ConflictCo" --resolution-url "https://jobs.lever.co/conflictco"
+python -m jobtracker discover companies promote --company "ConflictCo"
+```
+
+If a discovery is not relevant, ignore it:
+
+```powershell
+python -m jobtracker discover companies ignore --company "Lakeside Robotics"
+```
+
+### 6. Export a weekly snapshot
 
 CSV for spreadsheet-style review:
 
@@ -157,11 +191,12 @@ Markdown for a compact review artifact:
 python -m jobtracker export markdown --output reports/weekly-jobs.md --limit 25
 ```
 
-### 5. Tune your configuration
+### 7. Tune your configuration
 
 At the end of the weekly review, update config based on what you learned:
 
 - add or remove source identifiers in [config/sources.yaml](/abs/path/F:/Projects/JobTracker/config/sources.yaml)
+- use company discovery promotion for ATS-backed companies you want monitored without manually editing source lists first
 - refine target titles and skills in [config/profile.yaml](/abs/path/F:/Projects/JobTracker/config/profile.yaml)
 - adjust weighting in [config/scoring.yaml](/abs/path/F:/Projects/JobTracker/config/scoring.yaml) if the ranking feels off
 
@@ -239,6 +274,18 @@ python -m jobtracker jobs list --status stale --limit 20
 
 ```powershell
 python -m jobtracker companies list --recent-days 14 --limit 20
+```
+
+### Discovery review
+
+```powershell
+python -m jobtracker discover companies top --limit 10
+```
+
+### Resolved discovery candidates
+
+```powershell
+python -m jobtracker discover companies list --resolution-status resolved --limit 15
 ```
 
 ## Lightweight Scheduling

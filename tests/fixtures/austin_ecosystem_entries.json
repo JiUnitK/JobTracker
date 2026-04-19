@@ -1,0 +1,28 @@
+[
+  {
+    "source_url": "https://austin.example.com/companies/pulse-labs",
+    "company_name": "Pulse Labs",
+    "company_url": "https://pulselabs.dev",
+    "careers_url": "https://boards.greenhouse.io/pulselabs",
+    "location_text": "Austin, TX",
+    "workplace_type": "hybrid",
+    "summary": "Austin infrastructure startup hiring backend and platform engineers.",
+    "tags": ["startup", "distributed systems"],
+    "role_focus": ["backend engineer", "platform engineer"],
+    "representative_role": "Platform Engineer",
+    "evidence_kind": "ecosystem_entry"
+  },
+  {
+    "source_url": "https://austin.example.com/companies/lakeside",
+    "company_name": "Lakeside Robotics",
+    "company_url": "https://lakeside.dev",
+    "careers_url": "https://jobs.ashbyhq.com/Lakeside",
+    "location_text": "Austin, TX",
+    "workplace_type": "remote",
+    "summary": "Robotics platform company with remote software roles.",
+    "tags": ["robotics", "remote"],
+    "role_focus": ["software engineer", "backend engineer"],
+    "representative_role": "Software Engineer",
+    "evidence_kind": "ecosystem_entry"
+  }
+]

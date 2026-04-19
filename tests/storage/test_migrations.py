@@ -17,4 +17,13 @@ def test_alembic_upgrade_creates_expected_tables(sqlite_database_url: str) -> No
             ).fetchall()
         }
 
-    assert {"companies", "jobs", "job_observations", "search_runs", "sources"}.issubset(tables)
+    assert {
+        "companies",
+        "company_discoveries",
+        "company_discovery_observations",
+        "company_resolutions",
+        "jobs",
+        "job_observations",
+        "search_runs",
+        "sources",
+    }.issubset(tables)

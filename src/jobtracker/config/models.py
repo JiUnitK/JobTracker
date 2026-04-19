@@ -5,7 +5,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, HttpUrl, model_validator
 
-from jobtracker.models.domain import SourceType
+from jobtracker.models.domain import DiscoverySourceType, SourceType
 
 
 WorkplaceType = Literal["remote", "hybrid", "onsite"]
@@ -34,6 +34,72 @@ class SourcesConfig(BaseModel):
     sources: list[SourceDefinition] = Field(default_factory=list)
 
     def enabled_sources(self) -> list[SourceDefinition]:
+        return [source for source in self.sources if source.enabled]
+
+
+class CompanyDiscoveryQueryConfig(BaseModel):
+    keywords: list[str] = Field(default_factory=list)
+    locations: list[str] = Field(default_factory=list)
+    workplace_types: list[WorkplaceType] = Field(default_factory=list)
+    source_names: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_keywords(self) -> "CompanyDiscoveryQueryConfig":
+        cleaned = [item.strip() for item in self.keywords if item.strip()]
+        if not cleaned:
+            raise ValueError("At least one keyword is required for a discovery query")
+        self.keywords = cleaned
+        return self
+
+
+class CompanyDiscoverySourceDefinition(BaseModel):
+    name: str
+    type: DiscoverySourceType
+    enabled: bool = True
+    base_url: HttpUrl | None = None
+    params: dict[str, Any] = Field(default_factory=dict)
+
+
+class CompanyDiscoveryConfig(BaseModel):
+    class ScoringWeights(BaseModel):
+        title_match: float = 0.4
+        skill_match: float = 0.25
+        location_match: float = 0.35
+        repeated_appearance: float = 0.35
+        ats_confidence: float = 0.35
+        fresh_evidence: float = 0.3
+
+    class ScoringConfig(BaseModel):
+        fit_weights: "CompanyDiscoveryConfig.ScoringWeights" = Field(
+            default_factory=lambda: CompanyDiscoveryConfig.ScoringWeights(
+                title_match=0.4,
+                skill_match=0.25,
+                location_match=0.35,
+                repeated_appearance=0.0,
+                ats_confidence=0.0,
+                fresh_evidence=0.0,
+            )
+        )
+        hiring_weights: "CompanyDiscoveryConfig.ScoringWeights" = Field(
+            default_factory=lambda: CompanyDiscoveryConfig.ScoringWeights(
+                title_match=0.0,
+                skill_match=0.0,
+                location_match=0.0,
+                repeated_appearance=0.35,
+                ats_confidence=0.35,
+                fresh_evidence=0.3,
+            )
+        )
+        priority_mix: dict[str, float] = Field(
+            default_factory=lambda: {"fit_score": 0.5, "hiring_score": 0.5}
+        )
+
+    defaults: dict[str, int | float | str | bool] = Field(default_factory=dict)
+    queries: list[CompanyDiscoveryQueryConfig] = Field(default_factory=list)
+    sources: list[CompanyDiscoverySourceDefinition] = Field(default_factory=list)
+    scoring: ScoringConfig = Field(default_factory=ScoringConfig)
+
+    def enabled_sources(self) -> list[CompanyDiscoverySourceDefinition]:
         return [source for source in self.sources if source.enabled]
 
 
@@ -66,13 +132,18 @@ class ProfileConfig(BaseModel):
 class AppConfig(BaseModel):
     search_terms: SearchTermsConfig
     sources: SourcesConfig
+    company_discovery: CompanyDiscoveryConfig
     scoring: ScoringConfig
     profile: ProfileConfig
 
     def summary(self) -> str:
         enabled_sources = sum(1 for source in self.sources.sources if source.enabled)
+        enabled_discovery_sources = sum(
+            1 for source in self.company_discovery.sources if source.enabled
+        )
         return (
             f"{enabled_sources} enabled sources, "
+            f"{enabled_discovery_sources} enabled discovery sources, "
             f"{len(self.search_terms.include)} search terms, "
             f"{len(self.profile.target_titles)} target titles"
         )

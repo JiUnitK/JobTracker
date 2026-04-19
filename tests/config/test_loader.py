@@ -13,6 +13,9 @@ def test_load_app_config_reads_default_files() -> None:
 
     assert len(config.search_terms.include) >= 3
     assert any(source.name == "greenhouse" for source in config.sources.sources)
+    assert any(
+        source.name == "company_search" for source in config.company_discovery.sources
+    )
     assert "backend engineer" in config.profile.target_titles
 
 

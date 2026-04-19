@@ -5,12 +5,18 @@ from pathlib import Path
 import typer
 
 from jobtracker import __version__
+from jobtracker.company_discovery.runner import CompanyDiscoveryRunner
 from jobtracker.config.loader import load_app_config
 from jobtracker.logging import configure_logging
-from jobtracker.reporting import JobReportFilters, ReportingService
-from jobtracker.sources.registry import build_default_registry
-from jobtracker.sources.runner import RunCoordinator
-from jobtracker.storage import SourceRepository, create_session_factory
+from jobtracker.job_tracking.sources.registry import build_default_registry
+from jobtracker.job_tracking.sources.runner import RunCoordinator
+from jobtracker.reporting import CompanyDiscoveryReportFilters, JobReportFilters, ReportingService
+from jobtracker.storage import (
+    CompanyDiscoveryRepository,
+    CompanyResolutionRepository,
+    SourceRepository,
+    create_session_factory,
+)
 from jobtracker.storage.db import get_database_settings
 from jobtracker.storage.migrations import upgrade_database
 
@@ -24,12 +30,16 @@ sources_app = typer.Typer(help="Inspect configured collection sources.")
 jobs_app = typer.Typer(help="Inspect and rank tracked jobs.")
 companies_app = typer.Typer(help="Inspect company hiring activity.")
 export_app = typer.Typer(help="Export tracked data.")
+discover_app = typer.Typer(help="Discover new companies to monitor.")
+discover_companies_app = typer.Typer(help="Run company discovery workflows.")
 app.add_typer(config_app, name="config")
 app.add_typer(db_app, name="db")
 app.add_typer(sources_app, name="sources")
 app.add_typer(jobs_app, name="jobs")
 app.add_typer(companies_app, name="companies")
 app.add_typer(export_app, name="export")
+app.add_typer(discover_app, name="discover")
+discover_app.add_typer(discover_companies_app, name="companies")
 
 
 @app.callback()
@@ -135,6 +145,201 @@ def run_collection(
         f"persisted_jobs={summary.total_persisted_jobs}, "
         f"observations={summary.total_observations}"
     )
+
+
+@discover_companies_app.command("run")
+def run_company_discovery(
+    config_dir: Path = typer.Option(
+        Path("config"),
+        "--config-dir",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Directory containing JobTracker YAML config files.",
+    ),
+    database_url: str = typer.Option(
+        "",
+        "--database-url",
+        help="Database URL to use for the discovery run.",
+    ),
+) -> None:
+    """Run company discovery across enabled discovery sources."""
+    app_config = load_app_config(config_dir)
+    summary = CompanyDiscoveryRunner().run(app_config, database_url or None)
+    typer.echo(
+        "Discovery run complete: "
+        f"status={summary.status}, "
+        f"search_run_id={summary.search_run_id}, "
+        f"raw_discoveries={summary.total_raw_discoveries}, "
+        f"persisted_discoveries={summary.total_persisted_discoveries}, "
+        f"observations={summary.total_observations}, "
+        f"resolutions={summary.total_resolutions}"
+    )
+
+
+@discover_companies_app.command("list")
+def list_discovered_companies(
+    database_url: str = typer.Option("", "--database-url", help="Database URL to read from."),
+    location: str = typer.Option("", "--location", help="Filter discoveries by location substring."),
+    remote_only: bool = typer.Option(False, "--remote-only", help="Show remote-friendly discoveries only."),
+    recent_days: int = typer.Option(0, "--recent-days", help="Only include discoveries seen in the last N days."),
+    min_score: int = typer.Option(0, "--min-score", help="Minimum discovery score."),
+    discovery_status: str = typer.Option("", "--status", help="Filter by discovery status."),
+    resolution_status: str = typer.Option("", "--resolution-status", help="Filter by resolution status."),
+    sort_by: str = typer.Option("discovery", "--sort-by", help="Sort by discovery, fit, hiring, or recent."),
+    limit: int = typer.Option(20, "--limit", help="Maximum number of discoveries to display."),
+) -> None:
+    """List discovered companies with discovery and resolution status."""
+    session_factory = _session_for_reporting(database_url or None)
+    filters = CompanyDiscoveryReportFilters(
+        location=location or None,
+        remote_only=remote_only,
+        recent_days=recent_days or None,
+        min_score=min_score or None,
+        discovery_status=discovery_status or None,
+        resolution_status=resolution_status or None,
+        sort_by=sort_by,
+        limit=limit,
+    )
+    with session_factory() as session:
+        discoveries = ReportingService(session).list_discovered_companies(filters)
+    if not discoveries:
+        typer.echo("No discovered companies found.")
+        return
+    for discovery in discoveries:
+        typer.echo(
+            " | ".join(
+                [
+                    discovery.display_name,
+                    discovery.discovery_status,
+                    f"resolution={discovery.resolution_status}",
+                    f"discovery={discovery.discovery_score or 0}",
+                    f"fit={discovery.fit_score or 0}",
+                    f"hiring={discovery.hiring_score or 0}",
+                ]
+            )
+        )
+
+
+@discover_companies_app.command("top")
+def top_discovered_companies(
+    database_url: str = typer.Option("", "--database-url", help="Database URL to read from."),
+    recent_days: int = typer.Option(0, "--recent-days", help="Only include discoveries seen in the last N days."),
+    min_score: int = typer.Option(0, "--min-score", help="Minimum discovery score."),
+    resolution_status: str = typer.Option("", "--resolution-status", help="Filter by resolution status."),
+    sort_by: str = typer.Option("discovery", "--sort-by", help="Sort by discovery, fit, hiring, or recent."),
+    limit: int = typer.Option(10, "--limit", help="Maximum number of discoveries to display."),
+) -> None:
+    """Show the top-ranked discovered companies."""
+    session_factory = _session_for_reporting(database_url or None)
+    filters = CompanyDiscoveryReportFilters(
+        recent_days=recent_days or None,
+        min_score=min_score or None,
+        resolution_status=resolution_status or None,
+        sort_by=sort_by,
+        limit=limit,
+    )
+    with session_factory() as session:
+        discoveries = ReportingService(session).list_discovered_companies(filters)
+    if not discoveries:
+        typer.echo("No discovered companies found.")
+        return
+    for index, discovery in enumerate(discoveries, start=1):
+        typer.echo(
+            f"{index}. {discovery.display_name} | resolution={discovery.resolution_status} | "
+            f"discovery={discovery.discovery_score or 0}"
+        )
+
+
+@discover_companies_app.command("resolve")
+def resolve_discovered_company(
+    company: str = typer.Option(..., "--company", help="Discovery id, normalized name, or display name."),
+    resolution_url: str = typer.Option(
+        "",
+        "--resolution-url",
+        help="Specific resolution URL to select when multiple candidates exist.",
+    ),
+    database_url: str = typer.Option("", "--database-url", help="Database URL to read from."),
+) -> None:
+    """Accept a resolution candidate for a discovered company."""
+    session_factory = _session_for_reporting(database_url or None)
+    with session_factory() as session:
+        discovery_repo = CompanyDiscoveryRepository(session)
+        resolution_repo = CompanyResolutionRepository(session)
+        discovery = discovery_repo.get_by_selector(company)
+        if discovery is None:
+            raise typer.BadParameter(f"Discovered company '{company}' was not found.")
+        try:
+            selected = resolution_repo.select_resolution(
+                discovery.id,
+                resolution_url=resolution_url or None,
+            )
+        except ValueError as exc:
+            raise typer.BadParameter(str(exc)) from exc
+        session.commit()
+        typer.echo(
+            f"Selected resolution for {discovery.display_name}: "
+            f"{selected.platform} | {selected.url}"
+        )
+
+
+@discover_companies_app.command("promote")
+def promote_discovered_company(
+    company: str = typer.Option(..., "--company", help="Discovery id, normalized name, or display name."),
+    resolution_url: str = typer.Option(
+        "",
+        "--resolution-url",
+        help="Specific resolution URL to select before promotion.",
+    ),
+    database_url: str = typer.Option("", "--database-url", help="Database URL to read from."),
+) -> None:
+    """Promote a discovered company into tracked monitoring."""
+    session_factory = _session_for_reporting(database_url or None)
+    with session_factory() as session:
+        discovery_repo = CompanyDiscoveryRepository(session)
+        resolution_repo = CompanyResolutionRepository(session)
+        discovery = discovery_repo.get_by_selector(company)
+        if discovery is None:
+            raise typer.BadParameter(f"Discovered company '{company}' was not found.")
+        try:
+            selected = resolution_repo.select_resolution(
+                discovery.id,
+                resolution_url=resolution_url or None,
+            )
+        except ValueError as exc:
+            raise typer.BadParameter(str(exc)) from exc
+        if selected.platform not in {"greenhouse", "lever", "ashby"}:
+            raise typer.BadParameter(
+                "Promotion currently requires a selected ATS resolution on greenhouse, lever, or ashby."
+            )
+        promoted = discovery_repo.promote_to_tracked(
+            company,
+            selected_resolution=selected,
+        )
+        session.commit()
+        typer.echo(
+            f"Promoted {promoted.display_name} into tracked monitoring via "
+            f"{selected.platform}:{selected.identifier}"
+        )
+
+
+@discover_companies_app.command("ignore")
+def ignore_discovered_company(
+    company: str = typer.Option(..., "--company", help="Discovery id, normalized name, or display name."),
+    database_url: str = typer.Option("", "--database-url", help="Database URL to read from."),
+) -> None:
+    """Ignore a discovered company."""
+    session_factory = _session_for_reporting(database_url or None)
+    with session_factory() as session:
+        discovery_repo = CompanyDiscoveryRepository(session)
+        try:
+            discovery = discovery_repo.mark_ignored(company)
+        except ValueError as exc:
+            raise typer.BadParameter(str(exc)) from exc
+        session.commit()
+        typer.echo(f"Ignored discovered company: {discovery.display_name}")
 
 
 @sources_app.command("list")

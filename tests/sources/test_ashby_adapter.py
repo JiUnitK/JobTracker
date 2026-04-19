@@ -5,7 +5,7 @@ from pathlib import Path
 
 from jobtracker.config.models import SourceDefinition
 from jobtracker.models import SearchQuery
-from jobtracker.sources.ashby import AshbyAdapter
+from jobtracker.job_tracking.sources.ashby import AshbyAdapter
 
 
 def test_ashby_adapter_parses_and_filters_jobs() -> None:

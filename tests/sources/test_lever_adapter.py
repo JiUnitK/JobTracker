@@ -5,7 +5,7 @@ from pathlib import Path
 
 from jobtracker.config.models import SourceDefinition
 from jobtracker.models import SearchQuery
-from jobtracker.sources.lever import LeverAdapter
+from jobtracker.job_tracking.sources.lever import LeverAdapter
 
 
 def test_lever_adapter_parses_and_filters_jobs() -> None:

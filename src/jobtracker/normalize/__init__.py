@@ -1,6 +1,6 @@
-"""Normalization package."""
+"""Compatibility exports for job normalization helpers."""
 
-from jobtracker.normalize.jobs import (
+from jobtracker.job_tracking.normalize import (
     build_canonical_key,
     normalize_datetime,
     normalize_company_name,

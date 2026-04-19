@@ -1,5 +1,5 @@
-"""Scoring package."""
+"""Compatibility exports for job scoring."""
 
-from jobtracker.scoring.engine import JobScoreResult, ScoringService
+from jobtracker.job_tracking.scoring import JobScoreResult, ScoringService
 
 __all__ = ["JobScoreResult", "ScoringService"]

@@ -30,6 +30,7 @@ class CompanyORM(Base):
     )
 
     jobs: Mapped[list["JobORM"]] = relationship(back_populates="company")
+    discoveries: Mapped[list["CompanyDiscoveryORM"]] = relationship(back_populates="company")
 
 
 class SourceORM(Base):
@@ -61,6 +62,9 @@ class SearchRunORM(Base):
     summary_json: Mapped[dict] = mapped_column(JSON, default=dict)
 
     observations: Mapped[list["JobObservationORM"]] = relationship(
+        back_populates="search_run"
+    )
+    discovery_observations: Mapped[list["CompanyDiscoveryObservationORM"]] = relationship(
         back_populates="search_run"
     )
 
@@ -127,3 +131,82 @@ class JobObservationORM(Base):
 
     job: Mapped[JobORM] = relationship(back_populates="observations")
     search_run: Mapped[SearchRunORM] = relationship(back_populates="observations")
+
+
+class CompanyDiscoveryORM(Base):
+    __tablename__ = "company_discoveries"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    company_id: Mapped[int | None] = mapped_column(ForeignKey("companies.id"), index=True)
+    normalized_name: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    display_name: Mapped[str] = mapped_column(String(255))
+    company_url: Mapped[str | None] = mapped_column(String(1024))
+    careers_url: Mapped[str | None] = mapped_column(String(1024))
+    discovery_status: Mapped[str] = mapped_column(String(32), default="candidate")
+    resolution_status: Mapped[str] = mapped_column(String(32), default="unresolved")
+    discovery_score: Mapped[int | None] = mapped_column(Integer)
+    fit_score: Mapped[int | None] = mapped_column(Integer)
+    hiring_score: Mapped[int | None] = mapped_column(Integer)
+    score_payload: Mapped[dict] = mapped_column(JSON, default=dict)
+    first_discovered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    last_discovered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    promoted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    ignored_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    notes: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now
+    )
+
+    company: Mapped[CompanyORM | None] = relationship(back_populates="discoveries")
+    observations: Mapped[list["CompanyDiscoveryObservationORM"]] = relationship(
+        back_populates="company_discovery"
+    )
+    resolutions: Mapped[list["CompanyResolutionORM"]] = relationship(
+        back_populates="company_discovery"
+    )
+
+
+class CompanyDiscoveryObservationORM(Base):
+    __tablename__ = "company_discovery_observations"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    company_discovery_id: Mapped[int] = mapped_column(
+        ForeignKey("company_discoveries.id"), index=True
+    )
+    search_run_id: Mapped[int | None] = mapped_column(ForeignKey("search_runs.id"), index=True)
+    source_type: Mapped[str] = mapped_column(String(32))
+    source_name: Mapped[str] = mapped_column(String(64), index=True)
+    source_url: Mapped[str] = mapped_column(String(1024))
+    company_url: Mapped[str | None] = mapped_column(String(1024))
+    careers_url: Mapped[str | None] = mapped_column(String(1024))
+    job_url: Mapped[str | None] = mapped_column(String(1024))
+    job_title: Mapped[str | None] = mapped_column(String(255))
+    location_text: Mapped[str | None] = mapped_column(String(255))
+    workplace_type: Mapped[str] = mapped_column(String(32), default="unknown")
+    evidence_kind: Mapped[str] = mapped_column(String(64), default="company_mention")
+    observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    raw_payload: Mapped[dict] = mapped_column(JSON, default=dict)
+
+    company_discovery: Mapped[CompanyDiscoveryORM] = relationship(back_populates="observations")
+    search_run: Mapped[SearchRunORM | None] = relationship(
+        back_populates="discovery_observations"
+    )
+
+
+class CompanyResolutionORM(Base):
+    __tablename__ = "company_resolutions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    company_discovery_id: Mapped[int] = mapped_column(
+        ForeignKey("company_discoveries.id"), index=True
+    )
+    resolution_type: Mapped[str] = mapped_column(String(64))
+    platform: Mapped[str] = mapped_column(String(64))
+    identifier: Mapped[str] = mapped_column(String(255))
+    url: Mapped[str] = mapped_column(String(1024))
+    confidence: Mapped[float | None] = mapped_column(Numeric(4, 2))
+    is_selected: Mapped[bool] = mapped_column(Boolean, default=False)
+    observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+    company_discovery: Mapped[CompanyDiscoveryORM] = relationship(back_populates="resolutions")

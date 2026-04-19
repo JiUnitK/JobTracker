@@ -2,9 +2,15 @@
 
 from jobtracker.models.domain import (
     CompanyRecord,
+    CompanyDiscoveryQuery,
+    DiscoverySourceType,
+    DiscoveryStatus,
     JobStatus,
     NormalizedJobPosting,
+    NormalizedCompanyDiscovery,
     RawJobPosting,
+    RawCompanyDiscovery,
+    ResolutionStatus,
     SearchQuery,
     SourceType,
     WorkplaceType,
@@ -13,9 +19,15 @@ from jobtracker.models.domain import (
 
 __all__ = [
     "CompanyRecord",
+    "CompanyDiscoveryQuery",
+    "DiscoverySourceType",
+    "DiscoveryStatus",
     "JobStatus",
+    "NormalizedCompanyDiscovery",
     "NormalizedJobPosting",
+    "RawCompanyDiscovery",
     "RawJobPosting",
+    "ResolutionStatus",
     "SearchQuery",
     "SourceType",
     "WorkplaceType",
