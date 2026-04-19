@@ -44,6 +44,8 @@ class ScoringWeights(BaseModel):
     seniority_match: float = 0.0
     freshness: float = 0.0
     source_confidence: float = 0.0
+    repeated_observations: float = 0.0
+    related_openings: float = 0.0
 
 
 class ScoringConfig(BaseModel):

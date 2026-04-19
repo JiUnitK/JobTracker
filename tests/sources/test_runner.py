@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from pathlib import Path
 
 from sqlalchemy import select
@@ -109,6 +110,10 @@ sources:
 
     assert len(jobs) == 1
     assert jobs[0].title == "Backend Engineer"
+    assert jobs[0].fit_score is not None
+    assert jobs[0].hiring_score is not None
+    assert jobs[0].priority_score is not None
+    assert jobs[0].score_payload["fit_score"] == jobs[0].fit_score
     assert len(observations) == 1
     assert runs[0].status == "success"
     assert sources[0].last_success_at is not None
@@ -248,3 +253,155 @@ sources:
     assert all(source.last_success_at is not None for source in sources.values())
     normalized_keys = {job.canonical_key for job in jobs}
     assert len(normalized_keys) == 3
+
+
+def test_repeated_runs_update_seen_timestamps_and_infer_statuses(
+    scratch_dir: Path,
+    sqlite_database_url: str,
+) -> None:
+    sources_yaml = """\
+defaults:
+  timeout_seconds: 20
+  max_results_per_query: 100
+  stale_after_runs: 1
+  closed_after_runs: 2
+  recent_activity_days: 30
+sources:
+  - name: greenhouse
+    type: ats
+    enabled: true
+    reliability_tier: tier1
+    base_url: https://boards.greenhouse.io/
+    params:
+      board_tokens:
+        - exampleco
+"""
+    config_dir = _write_config(scratch_dir / "config", sources_yaml)
+    app_config = load_app_config(config_dir)
+
+    from jobtracker.models import RawJobPosting
+
+    first_registry = SourceRegistry()
+    first_registry.register(
+        FakeGreenhouseAdapter(
+            [
+                RawJobPosting(
+                    source="greenhouse",
+                    source_job_id="job-1",
+                    source_url="https://boards.greenhouse.io/exampleco/jobs/1",
+                    title="Backend Engineer",
+                    company_name="Exampleco",
+                    location_text="Austin, TX",
+                    workplace_type="hybrid",
+                    description_snippet="Python platform role",
+                    posted_at=datetime(2026, 4, 1, 12, 0, tzinfo=timezone.utc),
+                    raw_payload={"id": "job-1"},
+                )
+            ]
+        )
+    )
+    second_registry = SourceRegistry()
+    second_registry.register(FakeGreenhouseAdapter([]))
+    third_registry = SourceRegistry()
+    third_registry.register(FakeGreenhouseAdapter([]))
+
+    first_summary = RunCoordinator(registry=first_registry).run(
+        app_config,
+        sqlite_database_url,
+        run_started_at=datetime(2026, 4, 19, 10, 0, tzinfo=timezone.utc),
+    )
+    second_summary = RunCoordinator(registry=second_registry).run(
+        app_config,
+        sqlite_database_url,
+        run_started_at=datetime(2026, 4, 20, 10, 0, tzinfo=timezone.utc),
+    )
+    third_summary = RunCoordinator(registry=third_registry).run(
+        app_config,
+        sqlite_database_url,
+        run_started_at=datetime(2026, 4, 21, 10, 0, tzinfo=timezone.utc),
+    )
+
+    engine = create_db_engine(get_database_settings(sqlite_database_url))
+    with Session(engine) as session:
+        job = session.scalar(select(JobORM))
+        run = session.scalar(select(SearchRunORM).order_by(SearchRunORM.id.desc()))
+
+    assert first_summary.status_counts["active"] == 1
+    assert second_summary.status_counts["stale"] == 1
+    assert third_summary.status_counts["closed"] == 1
+    assert job is not None
+    assert job.first_seen_at == datetime(2026, 4, 19, 10, 0)
+    assert job.last_seen_at == datetime(2026, 4, 19, 10, 0)
+    assert job.current_status == "closed"
+    assert run is not None
+    assert run.summary_json["status_counts"]["closed"] == 1
+
+
+def test_company_rollups_summarize_recent_and_active_jobs(
+    scratch_dir: Path,
+    sqlite_database_url: str,
+) -> None:
+    sources_yaml = """\
+defaults:
+  timeout_seconds: 20
+  max_results_per_query: 100
+  stale_after_runs: 2
+  closed_after_runs: 4
+  recent_activity_days: 7
+sources:
+  - name: greenhouse
+    type: ats
+    enabled: true
+    reliability_tier: tier1
+    base_url: https://boards.greenhouse.io/
+    params:
+      board_tokens:
+        - exampleco
+"""
+    config_dir = _write_config(scratch_dir / "config", sources_yaml)
+    app_config = load_app_config(config_dir)
+
+    from jobtracker.models import RawJobPosting
+
+    registry = SourceRegistry()
+    registry.register(
+        FakeGreenhouseAdapter(
+            [
+                RawJobPosting(
+                    source="greenhouse",
+                    source_job_id="job-1",
+                    source_url="https://boards.greenhouse.io/exampleco/jobs/1",
+                    title="Backend Engineer",
+                    company_name="Exampleco",
+                    location_text="Austin, TX",
+                    workplace_type="hybrid",
+                    description_snippet="Python platform role",
+                    raw_payload={"id": "job-1"},
+                ),
+                RawJobPosting(
+                    source="greenhouse",
+                    source_job_id="job-2",
+                    source_url="https://boards.greenhouse.io/exampleco/jobs/2",
+                    title="Platform Engineer",
+                    company_name="Exampleco",
+                    location_text="Remote",
+                    workplace_type="remote",
+                    description_snippet="Distributed systems role",
+                    raw_payload={"id": "job-2"},
+                ),
+            ]
+        )
+    )
+
+    summary = RunCoordinator(registry=registry).run(
+        app_config,
+        sqlite_database_url,
+        run_started_at=datetime(2026, 4, 19, 10, 0, tzinfo=timezone.utc),
+    )
+
+    assert len(summary.company_rollups) == 1
+    rollup = summary.company_rollups[0]
+    assert rollup["display_name"] == "Exampleco"
+    assert rollup["active_relevant_job_count"] == 2
+    assert rollup["recent_relevant_job_count"] == 2
+    assert rollup["last_relevant_opening_seen_at"] == datetime(2026, 4, 19, 10, 0)

@@ -12,7 +12,11 @@ Overall progress:
 - Milestone 1 is complete
 - Milestone 2 is complete
 - Milestone 3 is complete
-- Milestone 4 is next
+- Milestone 4 is complete
+- Milestone 5 is complete
+- Milestone 6 is complete
+- Milestone 7 is complete
+- Milestone 8 is next
 
 Completed so far:
 
@@ -34,6 +38,13 @@ Completed so far:
 - Lever and Ashby adapters
 - Shared source parsing helpers and cross-source integration coverage
 - Source status inspection from the CLI
+- Expanded normalization helpers for company, title, workplace, location, and salary handling
+- Primary and secondary deduplication rules with regression coverage
+- Repeated-run lifecycle tracking and status inference
+- Company activity rollups in run summaries
+- Persisted job scoring with fit, hiring, and priority scores
+- Score explanation payloads and scoring-focused regression coverage
+- Reporting CLI for jobs, companies, CSV, and Markdown exports
 
 Current verification baseline:
 
@@ -260,37 +271,41 @@ Objective:
 
 Stabilize the model by merging repeated observations into durable job/company entities without over-merging.
 
+Status:
+
+- Complete
+
 Deliverables:
 
-- Company name normalization
-- Canonical job fingerprinting
-- Conservative deduplication rules
-- Best-source URL selection
+- [x] Company name normalization
+- [x] Canonical job fingerprinting
+- [x] Conservative deduplication rules
+- [x] Best-source URL selection
 
 Concrete tasks:
 
-- Add normalization helpers for:
+- [x] Add normalization helpers for:
   - company names
   - job titles
   - workplace type
   - dates
   - salary fields
-- Implement canonical key generation
-- Implement primary dedupe on `source + source_job_id`
-- Implement secondary dedupe heuristics
-- Add logic for selecting a preferred URL and preferred source
+- [x] Implement canonical key generation
+- [x] Implement primary dedupe on `source + source_job_id`
+- [x] Implement secondary dedupe heuristics
+- [x] Add logic for selecting a preferred URL and preferred source
 
 Testing tasks:
 
-- Unit tests for normalization helpers
-- Unit tests for deduplication rules
-- Regression fixtures for near-duplicate and non-duplicate cases
+- [x] Unit tests for normalization helpers
+- [x] Unit tests for deduplication rules
+- [x] Regression fixtures for near-duplicate and non-duplicate cases
 
 Exit criteria:
 
-- Repeated runs do not create unnecessary duplicate jobs
-- Similar jobs from multiple sources can be merged conservatively
-- Normalization rules are covered by targeted tests
+- [x] Repeated runs do not create unnecessary duplicate jobs
+- [x] Similar jobs from multiple sources can be merged conservatively
+- [x] Normalization rules are covered by targeted tests
 
 ## Milestone 5: History and Status Tracking
 
@@ -298,38 +313,42 @@ Objective:
 
 Make the system genuinely track hiring activity across time rather than only storing current rows.
 
+Status:
+
+- Complete
+
 Deliverables:
 
-- First seen / last seen logic
-- Job observation history
-- Status inference for job lifecycle
-- Company activity rollups
+- [x] First seen / last seen logic
+- [x] Job observation history
+- [x] Status inference for job lifecycle
+- [x] Company activity rollups
 
 Concrete tasks:
 
-- Update `first_seen_at` and `last_seen_at` consistently
-- Implement status inference:
+- [x] Update `first_seen_at` and `last_seen_at` consistently
+- [x] Implement status inference:
   - `active`
   - `stale`
   - `closed`
   - `unknown`
-- Add configurable thresholds for staleness/closure
-- Add company-level aggregates:
+- [x] Add configurable thresholds for staleness/closure
+- [x] Add company-level aggregates:
   - active relevant jobs
   - recent relevant jobs
   - latest relevant opening
 
 Testing tasks:
 
-- Repeated-run integration tests
-- Status transition tests across multiple runs
-- Company rollup tests
+- [x] Repeated-run integration tests
+- [x] Status transition tests across multiple runs
+- [x] Company rollup tests
 
 Exit criteria:
 
-- The same job behaves correctly across repeated runs
-- Job lifecycle status changes are reproducible and test-covered
-- Company activity summaries can be queried
+- [x] The same job behaves correctly across repeated runs
+- [x] Job lifecycle status changes are reproducible and test-covered
+- [x] Company activity summaries can be queried
 
 ## Milestone 6: Scoring Engine
 
@@ -337,40 +356,44 @@ Objective:
 
 Rank jobs and companies using transparent, configurable scoring.
 
+Status:
+
+- Complete
+
 Deliverables:
 
-- Fit scoring
-- Hiring scoring
-- Combined priority scoring
-- Score explanation payloads
+- [x] Fit scoring
+- [x] Hiring scoring
+- [x] Combined priority scoring
+- [x] Score explanation payloads
 
 Concrete tasks:
 
-- Define profile-driven scoring inputs
-- Implement fit score signals:
+- [x] Define profile-driven scoring inputs
+- [x] Implement fit score signals:
   - title match
   - skill match
   - location/workplace fit
   - seniority fit
-- Implement hiring score signals:
+- [x] Implement hiring score signals:
   - freshness
   - repeated observations
   - number of related openings
   - source confidence
-- Implement configurable weights
-- Persist score values and explanations
+- [x] Implement configurable weights
+- [x] Persist score values and explanations
 
 Testing tasks:
 
-- Unit tests for each score component
-- Golden tests for representative job profiles
-- Config-driven scoring tests to ensure weight changes behave predictably
+- [x] Unit tests for each score component
+- [x] Golden tests for representative job profiles
+- [x] Config-driven scoring tests to ensure weight changes behave predictably
 
 Exit criteria:
 
-- Jobs can be ranked by explainable scores
-- Score outputs are stable under test
-- Explanations make the ranking understandable
+- [x] Jobs can be ranked by explainable scores
+- [x] Score outputs are stable under test
+- [x] Explanations make the ranking understandable
 
 ## Milestone 7: CLI Reporting and Export
 
@@ -378,38 +401,42 @@ Objective:
 
 Make the collected and scored data useful from the command line.
 
+Status:
+
+- Complete
+
 Deliverables:
 
-- Job listing commands
-- Top-ranked report commands
-- Company activity reports
-- CSV and Markdown exports
+- [x] Job listing commands
+- [x] Top-ranked report commands
+- [x] Company activity reports
+- [x] CSV and Markdown exports
 
 Concrete tasks:
 
-- Add CLI commands:
+- [x] Add CLI commands:
   - `jobtracker jobs list`
   - `jobtracker jobs top`
   - `jobtracker companies list`
   - `jobtracker sources list`
   - `jobtracker export csv`
-- Add useful filters:
+- [x] Add useful filters:
   - Austin
   - Remote
   - recent only
   - minimum score
-- Add Markdown report output for weekly review
+- [x] Add Markdown report output for weekly review
 
 Testing tasks:
 
-- CLI output tests
-- Export file tests
-- Query/filter behavior tests
+- [x] CLI output tests
+- [x] Export file tests
+- [x] Query/filter behavior tests
 
 Exit criteria:
 
-- The CLI produces useful ranked outputs
-- Exported reports can be used without manual cleanup
+- [x] The CLI produces useful ranked outputs
+- [x] Exported reports can be used without manual cleanup
 
 ## Milestone 8: Hardening and Operational Quality
 
@@ -583,9 +610,9 @@ Mitigation:
 
 The best next implementation steps are:
 
-1. Add normalization helpers for company names, job titles, workplace type, dates, and salary fields
-2. Implement canonical key generation improvements and primary dedupe rules
-3. Add secondary dedupe heuristics and preferred-source selection
-4. Add normalization and deduplication regression tests
+1. Improve failure handling around live source runs and partial source outages
+2. Add timeout/retry policies and source-level diagnostics
+3. Document recurring scheduling and adapter authoring workflows
+4. Add operational hardening tests for error paths where practical
 
 This order gives the project a stable base so future source and scoring work can be added without repeatedly backtracking to fix structural issues.

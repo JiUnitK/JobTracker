@@ -10,6 +10,7 @@ from jobtracker.storage.db import (
 )
 from jobtracker.storage.orm import CompanyORM, JobObservationORM, JobORM, SearchRunORM, SourceORM
 from jobtracker.storage.repositories import (
+    CompanyActivityRepository,
     CompanyRepository,
     JobObservationRepository,
     JobRepository,
@@ -21,6 +22,7 @@ __all__ = [
     "Base",
     "DEFAULT_DATABASE_URL",
     "CompanyORM",
+    "CompanyActivityRepository",
     "CompanyRepository",
     "JobORM",
     "JobObservationORM",

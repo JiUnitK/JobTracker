@@ -37,6 +37,26 @@ Inspect source status and adapter coverage:
 python -m jobtracker sources list
 ```
 
+List and rank jobs:
+
+```powershell
+python -m jobtracker jobs list
+python -m jobtracker jobs top --remote-only --limit 10
+```
+
+List company hiring activity:
+
+```powershell
+python -m jobtracker companies list
+```
+
+Export results:
+
+```powershell
+python -m jobtracker export csv --output reports/jobs.csv
+python -m jobtracker export markdown --output reports/jobs.md
+```
+
 Configure source identifiers in `config/sources.yaml`:
 
 - `greenhouse.params.board_tokens`: Greenhouse board tokens such as `stripe`

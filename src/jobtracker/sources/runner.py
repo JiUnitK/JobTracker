@@ -2,14 +2,17 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 
 from sqlalchemy.orm import Session
 
 from jobtracker.config.models import AppConfig, SourceDefinition
 from jobtracker.normalize import normalize_raw_job
+from jobtracker.scoring import ScoringService
 from jobtracker.sources.planner import build_search_queries
 from jobtracker.sources.registry import SourceRegistry, build_default_registry
 from jobtracker.storage import (
+    CompanyActivityRepository,
     JobObservationRepository,
     JobRepository,
     SearchRunRepository,
@@ -23,6 +26,22 @@ from jobtracker.storage.migrations import upgrade_database
 logger = logging.getLogger(__name__)
 
 
+def serialize_company_rollups(company_rollups: list[dict[str, object]]) -> list[dict[str, object]]:
+    serialized: list[dict[str, object]] = []
+    for rollup in company_rollups:
+        serialized.append(
+            {
+                **rollup,
+                "last_relevant_opening_seen_at": (
+                    rollup["last_relevant_opening_seen_at"].isoformat()
+                    if rollup.get("last_relevant_opening_seen_at") is not None
+                    else None
+                ),
+            }
+        )
+    return serialized
+
+
 @dataclass(slots=True)
 class RunSummary:
     status: str
@@ -30,6 +49,8 @@ class RunSummary:
     total_raw_jobs: int = 0
     total_persisted_jobs: int = 0
     total_observations: int = 0
+    status_counts: dict[str, int] = field(default_factory=dict)
+    company_rollups: list[dict[str, object]] = field(default_factory=list)
     source_summaries: dict[str, dict[str, int | list[str]]] = field(default_factory=dict)
 
 
@@ -37,20 +58,36 @@ class RunCoordinator:
     def __init__(self, registry: SourceRegistry | None = None) -> None:
         self.registry = registry or build_default_registry()
 
-    def run(self, config: AppConfig, database_url: str | None = None) -> RunSummary:
+    def run(
+        self,
+        config: AppConfig,
+        database_url: str | None = None,
+        *,
+        run_started_at: datetime | None = None,
+    ) -> RunSummary:
         settings = get_database_settings(database_url)
         upgrade_database(settings.url)
         session_factory = create_session_factory(settings)
 
         with session_factory() as session:
-            return self._run_with_session(session, config)
+            return self._run_with_session(session, config, run_started_at=run_started_at)
 
-    def _run_with_session(self, session: Session, config: AppConfig) -> RunSummary:
+    def _run_with_session(
+        self,
+        session: Session,
+        config: AppConfig,
+        *,
+        run_started_at: datetime | None = None,
+    ) -> RunSummary:
         queries = build_search_queries(config)
         search_run_repo = SearchRunRepository(session)
         source_repo = SourceRepository(session)
         job_repo = JobRepository(session)
         observation_repo = JobObservationRepository(session)
+        company_activity_repo = CompanyActivityRepository(session)
+        stale_after_runs = int(config.sources.defaults.get("stale_after_runs", 2))
+        closed_after_runs = int(config.sources.defaults.get("closed_after_runs", 4))
+        recent_days = int(config.sources.defaults.get("recent_activity_days", 14))
 
         for source_definition in config.sources.sources:
             source_repo.upsert(
@@ -60,7 +97,10 @@ class RunCoordinator:
                 base_url=str(source_definition.base_url) if source_definition.base_url else None,
             )
 
-        search_run = search_run_repo.start(trigger_type="manual")
+        search_run = search_run_repo.start(
+            trigger_type="manual",
+            started_at=run_started_at,
+        )
         source_summaries: dict[str, dict[str, int | list[str]]] = {}
         total_raw_jobs = 0
         total_persisted_jobs = 0
@@ -95,7 +135,12 @@ class RunCoordinator:
 
             for raw_job in collected:
                 normalized_job = normalize_raw_job(raw_job)
-                job = job_repo.upsert(normalized_job, seen_at=raw_job.posted_at)
+                job = job_repo.upsert(
+                    normalized_job,
+                    seen_at=search_run.started_at,
+                    source=raw_job.source,
+                    source_job_id=raw_job.source_job_id,
+                )
                 summary["persisted_jobs"] += 1
                 total_persisted_jobs += 1
 
@@ -111,7 +156,7 @@ class RunCoordinator:
                     job_id=job.id,
                     search_run_id=search_run.id,
                     raw_job=raw_job,
-                    observed_at=raw_job.posted_at,
+                    observed_at=search_run.started_at,
                 )
                 seen_observations.add(observation_key)
                 summary["observations"] += 1
@@ -127,7 +172,22 @@ class RunCoordinator:
                 "total_observations": total_observations,
                 "sources": source_summaries,
             },
+            completed_at=search_run.started_at,
         )
+        status_counts = job_repo.infer_statuses(
+            current_run=search_run,
+            stale_after_runs=stale_after_runs,
+            closed_after_runs=closed_after_runs,
+        )
+        company_rollups = company_activity_repo.summarize(
+            recent_since=search_run.started_at - timedelta(days=recent_days)
+        )
+        ScoringService(session, config).score_all_jobs(now=search_run.started_at)
+        search_run.summary_json = {
+            **search_run.summary_json,
+            "status_counts": status_counts,
+            "company_rollups": serialize_company_rollups(company_rollups),
+        }
         session.commit()
         return RunSummary(
             status=status,
@@ -135,6 +195,8 @@ class RunCoordinator:
             total_raw_jobs=total_raw_jobs,
             total_persisted_jobs=total_persisted_jobs,
             total_observations=total_observations,
+            status_counts=status_counts,
+            company_rollups=company_rollups,
             source_summaries=source_summaries,
         )
 

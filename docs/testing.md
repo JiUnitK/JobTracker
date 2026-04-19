@@ -34,6 +34,13 @@ The initial scaffold includes:
 - Fixture-based Ashby adapter parsing coverage
 - End-to-end run coordinator coverage for success and partial-success paths
 - Cross-source end-to-end coverage across Greenhouse, Lever, and Ashby
+- Normalization helper unit coverage for company, title, workplace, location, and salary handling
+- Deduplication regression coverage for repeated source IDs and conservative cross-source merges
+- Repeated-run lifecycle coverage for `first_seen_at`, `last_seen_at`, and status transitions
+- Company activity rollup coverage for active and recent opening summaries
+- Scoring engine coverage for fit, hiring, and priority calculations
+- Golden/config-driven scoring coverage plus persistence checks through the run pipeline
+- Reporting CLI coverage for job lists, top jobs, company summaries, and exports
 
 ## Expectations for New Work
 
