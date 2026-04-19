@@ -26,6 +26,9 @@ The initial scaffold includes:
 - CLI smoke coverage
 - Default config validation coverage
 - YAML loader error handling coverage
+- Domain model validation coverage
+- SQLite-backed repository integration coverage
+- Alembic migration smoke coverage
 
 ## Expectations for New Work
 

@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl, model_validator
 
 
 WorkplaceType = Literal["remote", "hybrid", "onsite"]
@@ -67,3 +68,28 @@ class AppConfig(BaseModel):
             f"{len(self.search_terms.include)} search terms, "
             f"{len(self.profile.target_titles)} target titles"
         )
+
+
+class DatabaseSettings(BaseModel):
+    url: str = "sqlite:///jobtracker.db"
+    echo: bool = False
+
+    @property
+    def is_sqlite(self) -> bool:
+        return self.url.startswith("sqlite")
+
+    @property
+    def sqlite_path(self) -> Path | None:
+        if self.url == "sqlite:///:memory:":
+            return None
+        sqlite_prefix = "sqlite:///"
+        if self.url.startswith(sqlite_prefix):
+            return Path(self.url.removeprefix(sqlite_prefix))
+        return None
+
+    @model_validator(mode="after")
+    def validate_sqlite_path(self) -> "DatabaseSettings":
+        path = self.sqlite_path
+        if path is not None and not path.name:
+            raise ValueError("SQLite database URL must point to a file")
+        return self

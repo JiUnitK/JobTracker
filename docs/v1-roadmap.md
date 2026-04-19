@@ -9,7 +9,8 @@ Translate the v1 architecture into a concrete implementation plan with milestone
 Overall progress:
 
 - Milestone 0 is complete
-- Milestone 1 is next
+- Milestone 1 is complete
+- Milestone 2 is next
 
 Completed so far:
 
@@ -21,12 +22,17 @@ Completed so far:
 - Logging bootstrap
 - Initial `pytest` setup and smoke/config tests
 - Testing guide and repo hygiene files for Windows-friendly development
+- Canonical domain models for search, company, and job records
+- SQLAlchemy ORM models, repositories, and DB session helpers
+- Alembic migration scaffolding and initial schema migration
+- SQLite-backed persistence tests and migration smoke coverage
 
 Current verification baseline:
 
 - `python -m pytest` passes
 - `python -m jobtracker config validate` passes
 - `python -m jobtracker version` passes
+- `python -m jobtracker db upgrade` passes
 
 ## Roadmap Principles
 
@@ -113,46 +119,46 @@ Define the normalized data model and persist jobs, companies, sources, and run h
 
 Status:
 
-- Not started
+- Complete
 
 Deliverables:
 
-- Pydantic domain models
-- SQLAlchemy ORM models
-- Database session management
-- Initial Alembic migration
-- Repository/data access layer
+- [x] Pydantic domain models
+- [x] SQLAlchemy ORM models
+- [x] Database session management
+- [x] Initial Alembic migration
+- [x] Repository/data access layer
 
 Concrete tasks:
 
-- Define canonical domain models:
+- [x] Define canonical domain models:
   - `SearchQuery`
   - `RawJobPosting`
   - `NormalizedJobPosting`
   - `CompanyRecord`
-- Define ORM tables:
+- [x] Define ORM tables:
   - `companies`
   - `jobs`
   - `job_observations`
   - `search_runs`
   - `sources`
-- Add database initialization flow
-- Create initial migration
-- Add repository methods for upsert/read operations
-- Add environment/config support for SQLite and PostgreSQL
+- [x] Add database initialization flow
+- [x] Create initial migration
+- [x] Add repository methods for upsert/read operations
+- [x] Add environment/config support for SQLite and PostgreSQL
 
 Testing tasks:
 
-- Unit tests for model validation
-- Database integration tests against SQLite
-- Migration smoke test
-- Repository tests for insert and update behavior
+- [x] Unit tests for model validation
+- [x] Database integration tests against SQLite
+- [x] Migration smoke test
+- [x] Repository tests for insert and update behavior
 
 Exit criteria:
 
-- Database schema can be created from migrations
-- Core entities can be inserted and queried
-- Repositories work for the basic persistence paths
+- [x] Database schema can be created from migrations
+- [x] Core entities can be inserted and queried
+- [x] Repositories work for the basic persistence paths
 
 ## Milestone 2: Collection Pipeline Skeleton
 
@@ -497,11 +503,11 @@ The first implementation sprint should focus on foundation work that unlocks saf
 
 ### Sprint 2
 
-- Add canonical domain models
-- Add SQLAlchemy models
-- Add initial migration
-- Add database session/repository layer
-- Add DB integration tests
+- [x] Add canonical domain models
+- [x] Add SQLAlchemy models
+- [x] Add initial migration
+- [x] Add database session/repository layer
+- [x] Add DB integration tests
 
 ### Sprint 3
 
@@ -559,9 +565,9 @@ Mitigation:
 
 The best next implementation steps are:
 
-1. Define canonical domain models
-2. Add SQLAlchemy models and database session management
-3. Create the initial migration
-4. Add repository tests and SQLite-backed integration tests
+1. Define the source adapter interface and source registry
+2. Add search run orchestration across enabled sources
+3. Implement the first Tier 1 adapter, starting with Greenhouse
+4. Add fixture-based parser tests and a pipeline integration test
 
 This order gives the project a stable base so future source and scoring work can be added without repeatedly backtracking to fix structural issues.

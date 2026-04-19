@@ -19,6 +19,12 @@ python -m pip install -e .[dev]
 python -m jobtracker config validate
 ```
 
+Create or upgrade the local database schema:
+
+```powershell
+python -m jobtracker db upgrade
+```
+
 Run the test suite:
 
 ```powershell
