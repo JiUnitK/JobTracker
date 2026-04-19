@@ -18,6 +18,7 @@ def utc_now() -> datetime:
 
 @dataclass(slots=True)
 class JobReportFilters:
+    company: str | None = None
     location: str | None = None
     remote_only: bool = False
     recent_days: int | None = None
@@ -139,6 +140,13 @@ class ReportingService:
         output_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     def _job_matches(self, job: JobORM, filters: JobReportFilters) -> bool:
+        company_name = (
+            job.company.display_name.lower()
+            if job.company is not None and job.company.display_name
+            else ""
+        )
+        if filters.company and filters.company.lower() not in company_name:
+            return False
         if filters.location and filters.location.lower() not in (job.location_text or "").lower():
             return False
         if filters.remote_only and (job.workplace_type or "").lower() != "remote":
@@ -153,6 +161,24 @@ class ReportingService:
             if last_seen is None or cutoff is None or last_seen < cutoff:
                 return False
         return True
+
+    def summarize_discovery_inbox(self) -> dict[str, int]:
+        discoveries = list(self.session.scalars(select(CompanyDiscoveryORM).order_by(CompanyDiscoveryORM.id)))
+        summary = {
+            "candidate": 0,
+            "watch": 0,
+            "tracked": 0,
+            "ignored": 0,
+            "archived": 0,
+            "resolved_actionable": 0,
+        }
+        for discovery in discoveries:
+            status = (discovery.discovery_status or "candidate").lower()
+            if status in summary:
+                summary[status] += 1
+            if status in {"candidate", "watch"} and (discovery.resolution_status or "") in {"resolved", "partial"}:
+                summary["resolved_actionable"] += 1
+        return summary
 
     def _job_row(self, job: JobORM) -> dict[str, object]:
         company = job.company.display_name if job.company is not None else "Unknown"

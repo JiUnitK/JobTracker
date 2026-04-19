@@ -129,6 +129,25 @@ def test_jobs_commands_support_status_and_sort_filters(sqlite_database_url: str)
     assert "1. Example | Backend Engineer | Remote | priority=80" in fit_sorted_result.stdout
 
 
+def test_jobs_commands_support_company_drilldown(sqlite_database_url: str) -> None:
+    _seed_report_data(sqlite_database_url)
+
+    list_result = runner.invoke(
+        app,
+        ["jobs", "list", "--database-url", sqlite_database_url, "--company", "Example"],
+    )
+    top_result = runner.invoke(
+        app,
+        ["jobs", "top", "--database-url", sqlite_database_url, "--company", "Example", "--limit", "2"],
+    )
+
+    assert list_result.exit_code == 0
+    assert "Backend Engineer" in list_result.stdout
+    assert "Platform Engineer" in list_result.stdout
+    assert top_result.exit_code == 0
+    assert "1. Example | Backend Engineer | Remote | priority=80" in top_result.stdout
+
+
 def test_companies_list_shows_rollup_summary(sqlite_database_url: str) -> None:
     _seed_report_data(sqlite_database_url)
 

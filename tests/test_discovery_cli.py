@@ -141,6 +141,19 @@ def test_discovery_cli_list_and_top_commands(sqlite_database_url: str) -> None:
     assert "1. Pulse Labs | resolution=resolved" in top_result.stdout
 
 
+def test_discovery_cli_inbox_is_company_first_entrypoint(sqlite_database_url: str) -> None:
+    _seed_discovery_data(sqlite_database_url)
+
+    result = runner.invoke(
+        app,
+        ["discover", "companies", "inbox", "--database-url", sqlite_database_url],
+    )
+
+    assert result.exit_code == 0
+    assert "Discovery inbox: candidate=2" in result.stdout
+    assert "Pulse Labs | resolution=resolved" in result.stdout
+
+
 def test_discovery_cli_resolve_promote_and_ignore_commands(sqlite_database_url: str) -> None:
     _seed_discovery_data(sqlite_database_url)
     engine = create_db_engine(get_database_settings(sqlite_database_url))

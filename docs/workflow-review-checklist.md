@@ -10,17 +10,21 @@ Use this checklist when validating the documented JobTracker workflow.
 
 ## Daily Loop
 
-- `python -m jobtracker run` is the obvious first step
-- There is a clear command for reviewing top jobs
+- `python -m jobtracker discover companies run` is the obvious first step
+- `python -m jobtracker discover companies inbox` is the obvious first review view
+- There is a clear command for resolving, promoting, or ignoring discoveries
+- There is a clear command for drilling into jobs for one selected company
+- There is a clear command for reviewing top jobs after company selection
 - There is a clear command for reviewing recent jobs
 - There is a clear command for reviewing stale or closed jobs
 - There is a clear command for reviewing company activity
 
 ## Weekly Loop
 
-- There is a clear shortlist command for weekly review
+- There is a clear shortlist command for weekly discovery review
 - There is a clear command for reviewing discovered companies
 - The workflow shows how to resolve and promote promising discoveries
+- The workflow makes it clear that company discovery comes before broad job review
 - There is a CSV export path for deeper review
 - There is a Markdown export path for compact snapshots
 - The workflow explains when to update profile, source, and scoring config
@@ -32,7 +36,8 @@ Use this checklist when validating the documented JobTracker workflow.
 - The documented workflow does not require awkward manual database inspection
 - The score interpretation guidance is concrete enough to use in practice
 - The discovery workflow makes it obvious how a company moves from candidate to tracked
+- The transition from discovered company to company-specific job drill-down feels natural
 
 ## Follow-up
 
-- Any friction discovered during real usage should be captured for future 8A refinements or 8B hardening
+- Any friction discovered during real usage should be captured for future workflow refinements or 8B hardening

@@ -223,6 +223,46 @@ def list_discovered_companies(
         )
 
 
+@discover_companies_app.command("inbox")
+def discovery_inbox(
+    database_url: str = typer.Option("", "--database-url", help="Database URL to read from."),
+    limit: int = typer.Option(10, "--limit", help="Maximum number of discoveries to display."),
+) -> None:
+    """Show the company-first discovery inbox with the most actionable discoveries."""
+    session_factory = _session_for_reporting(database_url or None)
+    filters = CompanyDiscoveryReportFilters(
+        discovery_status="candidate",
+        sort_by="discovery",
+        limit=limit,
+    )
+    with session_factory() as session:
+        service = ReportingService(session)
+        discoveries = service.list_discovered_companies(filters)
+        summary = service.summarize_discovery_inbox()
+    typer.echo(
+        "Discovery inbox: "
+        f"candidate={summary['candidate']} | "
+        f"watch={summary['watch']} | "
+        f"tracked={summary['tracked']} | "
+        f"resolved_actionable={summary['resolved_actionable']}"
+    )
+    if not discoveries:
+        typer.echo("No candidate discoveries found.")
+        return
+    for discovery in discoveries:
+        typer.echo(
+            " | ".join(
+                [
+                    discovery.display_name,
+                    f"resolution={discovery.resolution_status}",
+                    f"discovery={discovery.discovery_score or 0}",
+                    f"fit={discovery.fit_score or 0}",
+                    f"hiring={discovery.hiring_score or 0}",
+                ]
+            )
+        )
+
+
 @discover_companies_app.command("top")
 def top_discovered_companies(
     database_url: str = typer.Option("", "--database-url", help="Database URL to read from."),
@@ -372,6 +412,7 @@ def list_sources(
 @jobs_app.command("list")
 def list_jobs(
     database_url: str = typer.Option("", "--database-url", help="Database URL to read from."),
+    company: str = typer.Option("", "--company", help="Filter jobs by company substring."),
     location: str = typer.Option("", "--location", help="Filter jobs by location substring."),
     remote_only: bool = typer.Option(False, "--remote-only", help="Show remote-only jobs."),
     recent_days: int = typer.Option(0, "--recent-days", help="Only include jobs seen in the last N days."),
@@ -383,6 +424,7 @@ def list_jobs(
     """List tracked jobs with scores and lifecycle status."""
     session_factory = _session_for_reporting(database_url or None)
     filters = JobReportFilters(
+        company=company or None,
         location=location or None,
         remote_only=remote_only,
         recent_days=recent_days or None,
@@ -416,6 +458,7 @@ def list_jobs(
 @jobs_app.command("top")
 def top_jobs(
     database_url: str = typer.Option("", "--database-url", help="Database URL to read from."),
+    company: str = typer.Option("", "--company", help="Filter jobs by company substring."),
     remote_only: bool = typer.Option(False, "--remote-only", help="Show remote-only jobs."),
     recent_days: int = typer.Option(0, "--recent-days", help="Only include jobs seen in the last N days."),
     min_score: int = typer.Option(0, "--min-score", help="Minimum priority score."),
@@ -426,6 +469,7 @@ def top_jobs(
     """Show the top-ranked jobs by priority score."""
     session_factory = _session_for_reporting(database_url or None)
     filters = JobReportFilters(
+        company=company or None,
         remote_only=remote_only,
         recent_days=recent_days or None,
         min_score=min_score or None,
