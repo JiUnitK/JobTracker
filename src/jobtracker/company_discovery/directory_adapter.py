@@ -18,8 +18,8 @@ from jobtracker.models import CompanyDiscoveryQuery, RawCompanyDiscovery
 FetchJson = Callable[[str], Any]
 
 
-class AustinEcosystemDiscoveryAdapter(CompanyDiscoveryAdapter):
-    source_name = "austin_ecosystem"
+class CompanyDirectoryDiscoveryAdapter(CompanyDiscoveryAdapter):
+    source_name = "company_directory"
 
     def __init__(self, fetch_json: FetchJson | None = None) -> None:
         self.fetch_json = fetch_json or fetch_json_default
@@ -44,7 +44,6 @@ class AustinEcosystemDiscoveryAdapter(CompanyDiscoveryAdapter):
                     " ".join(str(item) for item in entry.get("role_focus", []) if item),
                 ]
             )
-
             if not text_matches_query(searchable_text, query.keywords):
                 continue
             if not location_matches_query(location_text, query.locations):
@@ -63,7 +62,7 @@ class AustinEcosystemDiscoveryAdapter(CompanyDiscoveryAdapter):
                     job_title=entry.get("representative_role"),
                     location_text=location_text or None,
                     workplace_type=workplace_type,  # type: ignore[arg-type]
-                    evidence_kind=str(entry.get("evidence_kind", "ecosystem_entry")),
+                    evidence_kind=str(entry.get("evidence_kind", "directory_entry")),
                     raw_payload=entry,
                 )
             )

@@ -81,3 +81,5 @@ def test_company_discovery_scoring_generates_explainable_scores(sqlite_database_
         assert result.discovery_score >= 78
         assert "observed roles closely match target titles" in result.payload["fit_reasons"]
         assert "company resolves to a high-confidence ATS" in result.payload["hiring_reasons"]
+        assert result.payload["best_resolution"]["platform"] == "greenhouse"
+        assert result.payload["resolution_candidate_count"] == 1

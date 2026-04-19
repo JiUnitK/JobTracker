@@ -35,8 +35,20 @@ sources:
     enabled: false
     params:
       results: []
+      results_urls: []
   - name: austin_ecosystem
     type: ecosystem
     enabled: false
     params:
       entries: []
+      entries_urls: []
+      query_url_template: ""
+      entries_payload_key: entries
+  - name: company_directory
+    type: ecosystem
+    enabled: false
+    params:
+      entries: []
+      entries_urls: []
+      query_url_template: ""
+      entries_payload_key: entries

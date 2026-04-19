@@ -303,4 +303,36 @@ class CompanyDiscoveryScoringService:
                 (ob.workplace_type for ob in discovery.observations if ob.workplace_type),
                 None,
             ),
+            "source_names": sorted(
+                {
+                    ob.source_name
+                    for ob in discovery.observations
+                    if (ob.source_name or "").strip()
+                }
+            ),
+            "observation_count": len(discovery.observations),
+            "best_resolution": self._best_resolution_payload(discovery.resolutions),
+            "resolution_candidate_count": len(discovery.resolutions),
+        }
+
+    def _best_resolution_payload(
+        self,
+        resolutions: list[CompanyResolutionORM],
+    ) -> dict[str, object] | None:
+        if not resolutions:
+            return None
+        selected = next((resolution for resolution in resolutions if resolution.is_selected), None)
+        best = selected or max(
+            resolutions,
+            key=lambda resolution: (
+                1 if resolution.platform in {"greenhouse", "lever", "ashby"} else 0,
+                float(resolution.confidence or 0),
+            ),
+        )
+        return {
+            "platform": best.platform,
+            "identifier": best.identifier,
+            "url": best.url,
+            "confidence": float(best.confidence or 0),
+            "selected": bool(best.is_selected),
         }

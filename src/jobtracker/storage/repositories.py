@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.orm import Session
 
@@ -548,6 +547,7 @@ class CompanyResolutionRepository:
             existing.is_selected = is_selected
             existing.observed_at = to_utc_naive(observed_at) or utc_now()
 
+        self.session.flush()
         self.refresh_resolution_state(company_discovery_id)
         self.session.flush()
         return existing
@@ -587,6 +587,19 @@ class CompanyResolutionRepository:
         for resolution in resolutions:
             resolution.is_selected = resolution.id == selected_id
         self.session.flush()
+
+    def list_for_discovery(self, company_discovery_id: int) -> list[CompanyResolutionORM]:
+        return list(
+            self.session.scalars(
+                select(CompanyResolutionORM)
+                .where(CompanyResolutionORM.company_discovery_id == company_discovery_id)
+                .order_by(
+                    CompanyResolutionORM.is_selected.desc(),
+                    CompanyResolutionORM.confidence.desc(),
+                    CompanyResolutionORM.id.asc(),
+                )
+            )
+        )
 
     def get_selected_for_discovery(self, company_discovery_id: int) -> CompanyResolutionORM | None:
         return self.session.scalar(

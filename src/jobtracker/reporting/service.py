@@ -51,6 +51,14 @@ def _sort_key(job: JobORM, sort_by: str) -> tuple:
 
 
 def _discovery_sort_key(discovery: CompanyDiscoveryORM, sort_by: str) -> tuple:
+    if sort_by == "actionable":
+        return (
+            _discovery_action_rank(discovery),
+            discovery.discovery_score or 0,
+            discovery.fit_score or 0,
+            to_utc_naive(discovery.last_discovered_at) or datetime.min,
+            discovery.id,
+        )
     if sort_by == "fit":
         return (discovery.fit_score or 0, discovery.discovery_score or 0, discovery.id)
     if sort_by == "hiring":
@@ -62,6 +70,34 @@ def _discovery_sort_key(discovery: CompanyDiscoveryORM, sort_by: str) -> tuple:
             discovery.id,
         )
     return (discovery.discovery_score or 0, discovery.fit_score or 0, discovery.id)
+
+
+def describe_discovery_action(discovery: CompanyDiscoveryORM) -> str:
+    status = (discovery.discovery_status or "candidate").lower()
+    resolution = (discovery.resolution_status or "unresolved").lower()
+    if status in {"ignored", "archived"}:
+        return "ignored"
+    if status == "tracked":
+        return "review_jobs"
+    if resolution == "resolved":
+        return "promote"
+    if resolution == "conflicted":
+        return "resolve"
+    if resolution == "partial":
+        return "review_resolution"
+    return "watch"
+
+
+def _discovery_action_rank(discovery: CompanyDiscoveryORM) -> int:
+    action = describe_discovery_action(discovery)
+    return {
+        "promote": 5,
+        "resolve": 4,
+        "review_resolution": 3,
+        "review_jobs": 2,
+        "watch": 1,
+        "ignored": 0,
+    }.get(action, 0)
 
 
 class ReportingService:
@@ -171,6 +207,9 @@ class ReportingService:
             "ignored": 0,
             "archived": 0,
             "resolved_actionable": 0,
+            "ready_to_promote": 0,
+            "needs_resolution": 0,
+            "ready_for_job_review": 0,
         }
         for discovery in discoveries:
             status = (discovery.discovery_status or "candidate").lower()
@@ -178,6 +217,13 @@ class ReportingService:
                 summary[status] += 1
             if status in {"candidate", "watch"} and (discovery.resolution_status or "") in {"resolved", "partial"}:
                 summary["resolved_actionable"] += 1
+            action = describe_discovery_action(discovery)
+            if action == "promote":
+                summary["ready_to_promote"] += 1
+            elif action in {"resolve", "review_resolution"}:
+                summary["needs_resolution"] += 1
+            elif action == "review_jobs":
+                summary["ready_for_job_review"] += 1
         return summary
 
     def _job_row(self, job: JobORM) -> dict[str, object]:

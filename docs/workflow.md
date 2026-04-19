@@ -14,9 +14,9 @@ This guide picks up after day 1 onboarding. The README covers day 1. This docume
 
 Current limitation:
 
-- company discovery still begins from manually seeded discovery inputs in `config/company_discovery.yaml`
+- discovery is now autonomous from enabled sources, but it still depends on configured discovery sources rather than zero-config built-in open-web search
 
-The roadmap for removing that manual step is in [v1-roadmap.md](/abs/path/F:/Projects/JobTracker/docs/v1-roadmap.md).
+The next work is tracked in [v1-roadmap.md](/abs/path/F:/Projects/JobTracker/docs/v1-roadmap.md).
 
 ## Core Idea
 
@@ -26,11 +26,11 @@ The recurring loop is:
 
 1. run company discovery
 2. review the discovery inbox
-3. resolve, promote, or ignore companies
-4. run tracked job collection
-5. drill down into jobs for the companies that matter
-6. review the broader tracked-job shortlist
-7. export a snapshot when helpful
+3. review one company at a time when needed
+4. resolve, promote, or ignore companies
+5. run tracked job collection
+6. drill down into jobs for the companies that matter
+7. review the broader tracked-job shortlist
 8. tune config based on what you learned
 
 ## Daily Workflow
@@ -54,11 +54,28 @@ This should be the default entry point.
 What to look for:
 
 - companies with strong `discovery_score`
-- discoveries that already have `resolution=resolved`
+- discoveries that already have `next=promote`
+- discoveries that still need `next=resolve`
 - repeated appearances across discovery sources
 - obvious ignores you can clear out quickly
 
-### 3. Resolve, promote, or ignore discoveries
+### 3. Review one promising company directly
+
+When one company stands out, open the company review view:
+
+```powershell
+python -m jobtracker discover companies review --company "Pulse Labs"
+```
+
+This is the cleanest bridge from discovery into action. It shows:
+
+- the company's current status
+- the best current ATS or careers target
+- the next action to take
+- the known resolution candidates
+- tracked jobs inline once the company has already been promoted
+
+### 4. Resolve, promote, or ignore discoveries
 
 If a company looks promising and already has a strong ATS resolution:
 
@@ -79,7 +96,7 @@ If a company is not relevant:
 python -m jobtracker discover companies ignore --company "Lakeside Robotics"
 ```
 
-### 4. Run tracked job collection
+### 5. Run tracked job collection
 
 ```powershell
 python -m jobtracker run
@@ -91,18 +108,19 @@ If a tracked source is unavailable, check:
 python -m jobtracker sources list
 ```
 
-### 5. Drill down into jobs for the companies that earned attention
+### 6. Drill down into jobs for the companies that earned attention
 
 This is the deeper layer of the workflow.
 
 For one company:
 
 ```powershell
+python -m jobtracker discover companies review --company "Pulse Labs"
 python -m jobtracker jobs list --company "Pulse Labs" --sort-by priority --limit 10
 python -m jobtracker jobs top --company "Pulse Labs" --limit 5
 ```
 
-### 6. Review the broader tracked-job shortlist
+### 7. Review the broader tracked-job shortlist
 
 For remote:
 
@@ -122,20 +140,20 @@ What to look for:
 - jobs with good fit and fresh hiring signals
 - tracked companies that keep producing attractive roles
 
-### 7. Review recent job movement
+### 8. Review recent job movement
 
 ```powershell
 python -m jobtracker jobs list --recent-days 3 --sort-by recent --limit 20
 ```
 
-### 8. Review stale or closed jobs
+### 9. Review stale or closed jobs
 
 ```powershell
 python -m jobtracker jobs list --status stale --sort-by recent --limit 20
 python -m jobtracker jobs list --status closed --limit 20
 ```
 
-### 9. Review company momentum
+### 10. Review company momentum
 
 ```powershell
 python -m jobtracker companies list --recent-days 14 --limit 20
@@ -157,6 +175,7 @@ python -m jobtracker discover companies inbox --limit 20
 ```powershell
 python -m jobtracker discover companies top --limit 25
 python -m jobtracker discover companies list --resolution-status resolved --limit 20
+python -m jobtracker discover companies review --company "Pulse Labs"
 ```
 
 Suggested questions:
@@ -183,6 +202,7 @@ python -m jobtracker run
 If a promoted or already-tracked company deserves closer review:
 
 ```powershell
+python -m jobtracker discover companies review --company "Pulse Labs"
 python -m jobtracker jobs list --company "Pulse Labs" --sort-by priority --limit 10
 python -m jobtracker jobs top --company "Pulse Labs" --limit 5
 ```
@@ -219,6 +239,7 @@ python -m jobtracker export markdown --output reports/weekly-jobs.md --limit 25
 
 At the end of the weekly review, update config based on what you learned:
 
+- improve discovery-source coverage in [config/company_discovery.yaml](/abs/path/F:/Projects/JobTracker/config/company_discovery.yaml) if your inbox is too thin or too noisy
 - use discovery promotion for ATS-backed companies you want monitored without manually editing source lists first
 - add or remove source identifiers in [config/sources.yaml](/abs/path/F:/Projects/JobTracker/config/sources.yaml) when you want broader direct tracked coverage
 - refine target titles and skills in [config/profile.yaml](/abs/path/F:/Projects/JobTracker/config/profile.yaml)
@@ -238,6 +259,12 @@ python -m jobtracker discover companies inbox --limit 10
 
 ```powershell
 python -m jobtracker discover companies top --limit 10
+```
+
+### Single-company review
+
+```powershell
+python -m jobtracker discover companies review --company "Pulse Labs"
 ```
 
 ### Resolved discovery candidates
@@ -316,4 +343,4 @@ As you use the workflow in practice, pay attention to:
 - cases where stale or closed behavior feels wrong
 - moments where the jump from company discovery to company-specific job review feels clumsy
 
-Those are good candidates for future workflow improvements or Milestone 8B hardening work.
+Those are good candidates for future workflow improvements or hardening work.

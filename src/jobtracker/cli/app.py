@@ -10,7 +10,12 @@ from jobtracker.config.loader import load_app_config
 from jobtracker.logging import configure_logging
 from jobtracker.job_tracking.sources.registry import build_default_registry
 from jobtracker.job_tracking.sources.runner import RunCoordinator
-from jobtracker.reporting import CompanyDiscoveryReportFilters, JobReportFilters, ReportingService
+from jobtracker.reporting import (
+    CompanyDiscoveryReportFilters,
+    JobReportFilters,
+    ReportingService,
+    describe_discovery_action,
+)
 from jobtracker.storage import (
     CompanyDiscoveryRepository,
     CompanyResolutionRepository,
@@ -116,6 +121,25 @@ def _session_for_reporting(database_url: str | None = None):
     return create_session_factory(settings)
 
 
+def _discovery_payload(discovery) -> dict:
+    return discovery.score_payload if isinstance(discovery.score_payload, dict) else {}
+
+
+def _source_text(payload: dict) -> str:
+    source_names = payload.get("source_names", [])
+    return ",".join(source_names) if isinstance(source_names, list) else "-"
+
+
+def _best_resolution_text(payload: dict) -> str:
+    best_resolution = payload.get("best_resolution")
+    if isinstance(best_resolution, dict):
+        platform = str(best_resolution.get("platform", "") or "")
+        identifier = str(best_resolution.get("identifier", "") or "")
+        if platform and identifier:
+            return f"{platform}:{identifier}"
+    return "-"
+
+
 @app.command("run")
 def run_collection(
     config_dir: Path = typer.Option(
@@ -188,7 +212,7 @@ def list_discovered_companies(
     min_score: int = typer.Option(0, "--min-score", help="Minimum discovery score."),
     discovery_status: str = typer.Option("", "--status", help="Filter by discovery status."),
     resolution_status: str = typer.Option("", "--resolution-status", help="Filter by resolution status."),
-    sort_by: str = typer.Option("discovery", "--sort-by", help="Sort by discovery, fit, hiring, or recent."),
+    sort_by: str = typer.Option("actionable", "--sort-by", help="Sort by actionable, discovery, fit, hiring, or recent."),
     limit: int = typer.Option(20, "--limit", help="Maximum number of discoveries to display."),
 ) -> None:
     """List discovered companies with discovery and resolution status."""
@@ -209,6 +233,10 @@ def list_discovered_companies(
         typer.echo("No discovered companies found.")
         return
     for discovery in discoveries:
+        payload = _discovery_payload(discovery)
+        source_text = _source_text(payload)
+        best_text = _best_resolution_text(payload)
+        next_action = describe_discovery_action(discovery)
         typer.echo(
             " | ".join(
                 [
@@ -218,6 +246,9 @@ def list_discovered_companies(
                     f"discovery={discovery.discovery_score or 0}",
                     f"fit={discovery.fit_score or 0}",
                     f"hiring={discovery.hiring_score or 0}",
+                    f"sources={source_text or '-'}",
+                    f"best={best_text}",
+                    f"next={next_action}",
                 ]
             )
         )
@@ -232,7 +263,7 @@ def discovery_inbox(
     session_factory = _session_for_reporting(database_url or None)
     filters = CompanyDiscoveryReportFilters(
         discovery_status="candidate",
-        sort_by="discovery",
+        sort_by="actionable",
         limit=limit,
     )
     with session_factory() as session:
@@ -244,12 +275,17 @@ def discovery_inbox(
         f"candidate={summary['candidate']} | "
         f"watch={summary['watch']} | "
         f"tracked={summary['tracked']} | "
-        f"resolved_actionable={summary['resolved_actionable']}"
+        f"ready_to_promote={summary['ready_to_promote']} | "
+        f"needs_resolution={summary['needs_resolution']}"
     )
     if not discoveries:
         typer.echo("No candidate discoveries found.")
         return
     for discovery in discoveries:
+        payload = _discovery_payload(discovery)
+        source_text = _source_text(payload)
+        best_text = _best_resolution_text(payload)
+        next_action = describe_discovery_action(discovery)
         typer.echo(
             " | ".join(
                 [
@@ -258,6 +294,9 @@ def discovery_inbox(
                     f"discovery={discovery.discovery_score or 0}",
                     f"fit={discovery.fit_score or 0}",
                     f"hiring={discovery.hiring_score or 0}",
+                    f"sources={source_text or '-'}",
+                    f"best={best_text}",
+                    f"next={next_action}",
                 ]
             )
         )
@@ -269,7 +308,7 @@ def top_discovered_companies(
     recent_days: int = typer.Option(0, "--recent-days", help="Only include discoveries seen in the last N days."),
     min_score: int = typer.Option(0, "--min-score", help="Minimum discovery score."),
     resolution_status: str = typer.Option("", "--resolution-status", help="Filter by resolution status."),
-    sort_by: str = typer.Option("discovery", "--sort-by", help="Sort by discovery, fit, hiring, or recent."),
+    sort_by: str = typer.Option("actionable", "--sort-by", help="Sort by actionable, discovery, fit, hiring, or recent."),
     limit: int = typer.Option(10, "--limit", help="Maximum number of discoveries to display."),
 ) -> None:
     """Show the top-ranked discovered companies."""
@@ -287,10 +326,106 @@ def top_discovered_companies(
         typer.echo("No discovered companies found.")
         return
     for index, discovery in enumerate(discoveries, start=1):
+        payload = _discovery_payload(discovery)
+        source_text = _source_text(payload)
+        best_text = _best_resolution_text(payload)
+        next_action = describe_discovery_action(discovery)
         typer.echo(
             f"{index}. {discovery.display_name} | resolution={discovery.resolution_status} | "
-            f"discovery={discovery.discovery_score or 0}"
+            f"discovery={discovery.discovery_score or 0} | sources={source_text or '-'} | "
+            f"best={best_text} | next={next_action}"
         )
+
+
+@discover_companies_app.command("review")
+def review_discovered_company(
+    company: str = typer.Option(..., "--company", help="Discovery id, normalized name, or display name."),
+    database_url: str = typer.Option("", "--database-url", help="Database URL to read from."),
+    job_limit: int = typer.Option(5, "--job-limit", help="Maximum tracked jobs to show when the company is already tracked."),
+) -> None:
+    """Review one discovered company and the next action to take."""
+    session_factory = _session_for_reporting(database_url or None)
+    with session_factory() as session:
+        discovery_repo = CompanyDiscoveryRepository(session)
+        resolution_repo = CompanyResolutionRepository(session)
+        discovery = discovery_repo.get_by_selector(company)
+        if discovery is None:
+            raise typer.BadParameter(f"Discovered company '{company}' was not found.")
+
+        payload = _discovery_payload(discovery)
+        source_text = _source_text(payload)
+        best_text = _best_resolution_text(payload)
+        next_action = describe_discovery_action(discovery)
+        typer.echo(
+            " | ".join(
+                [
+                    discovery.display_name,
+                    f"status={discovery.discovery_status}",
+                    f"resolution={discovery.resolution_status}",
+                    f"discovery={discovery.discovery_score or 0}",
+                    f"fit={discovery.fit_score or 0}",
+                    f"hiring={discovery.hiring_score or 0}",
+                    f"sources={source_text or '-'}",
+                    f"best={best_text}",
+                    f"next={next_action}",
+                ]
+            )
+        )
+
+        recommended_command = ""
+        if next_action == "promote":
+            recommended_command = f'python -m jobtracker discover companies promote --company "{discovery.display_name}"'
+        elif next_action == "resolve":
+            recommended_command = f'python -m jobtracker discover companies resolve --company "{discovery.display_name}" --resolution-url "<candidate-url>"'
+        elif next_action == "review_jobs":
+            recommended_command = f'python -m jobtracker jobs top --company "{discovery.display_name}" --limit {job_limit}'
+        elif next_action == "review_resolution":
+            recommended_command = f'python -m jobtracker discover companies review --company "{discovery.display_name}"'
+        if recommended_command:
+            typer.echo(f"Recommended command: {recommended_command}")
+
+        resolutions = resolution_repo.list_for_discovery(discovery.id)
+        if resolutions:
+            typer.echo("Resolution candidates:")
+            for resolution in resolutions:
+                typer.echo(
+                    " - "
+                    + " | ".join(
+                        [
+                            f"{resolution.platform}:{resolution.identifier}",
+                            f"confidence={float(resolution.confidence or 0):.2f}",
+                            f"selected={'yes' if resolution.is_selected else 'no'}",
+                            resolution.url,
+                        ]
+                    )
+                )
+
+        if discovery.discovery_status == "tracked":
+            jobs = ReportingService(session).list_jobs(
+                JobReportFilters(
+                    company=discovery.display_name,
+                    limit=job_limit,
+                    sort_by="priority",
+                )
+            )
+            if jobs:
+                typer.echo("Tracked jobs:")
+                for job in jobs:
+                    company_name = job.company.display_name if job.company is not None else discovery.display_name
+                    typer.echo(
+                        " - "
+                        + " | ".join(
+                            [
+                                company_name,
+                                job.title,
+                                job.location_text or "-",
+                                job.current_status,
+                                f"priority={job.priority_score or 0}",
+                            ]
+                        )
+                    )
+            else:
+                typer.echo("Tracked jobs: none yet. Run `python -m jobtracker run` after promotion.")
 
 
 @discover_companies_app.command("resolve")

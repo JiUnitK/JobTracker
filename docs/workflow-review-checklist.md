@@ -12,6 +12,7 @@ Use this checklist when validating the documented JobTracker workflow.
 
 - `python -m jobtracker discover companies run` is the obvious first step
 - `python -m jobtracker discover companies inbox` is the obvious first review view
+- `python -m jobtracker discover companies review --company ...` is the obvious single-company review view
 - There is a clear command for resolving, promoting, or ignoring discoveries
 - There is a clear command for drilling into jobs for one selected company
 - There is a clear command for reviewing top jobs after company selection
@@ -36,6 +37,7 @@ Use this checklist when validating the documented JobTracker workflow.
 - The documented workflow does not require awkward manual database inspection
 - The score interpretation guidance is concrete enough to use in practice
 - The discovery workflow makes it obvious how a company moves from candidate to tracked
+- The discovery workflow makes the next action obvious from inbox and review output
 - The transition from discovered company to company-specific job drill-down feels natural
 
 ## Follow-up

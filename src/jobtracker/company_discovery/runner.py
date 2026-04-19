@@ -3,12 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from jobtracker.company_discovery.normalize import infer_resolution_candidate, normalize_company_discovery
+from jobtracker.company_discovery.normalize import normalize_company_discovery
 from jobtracker.company_discovery.planner import build_company_discovery_queries
 from jobtracker.company_discovery.registry import (
     CompanyDiscoveryRegistry,
     build_default_company_discovery_registry,
 )
+from jobtracker.company_discovery.resolution import infer_resolution_candidates
 from jobtracker.company_discovery.scoring import CompanyDiscoveryScoringService
 from jobtracker.config.models import AppConfig
 from jobtracker.storage import (
@@ -88,15 +89,18 @@ class CompanyDiscoveryRunner:
                         summary.total_persisted_discoveries += 1
                         summary.total_observations += 1
 
-                        resolution_candidate = infer_resolution_candidate(normalized)
-                        if resolution_candidate is not None:
+                        resolution_candidates = infer_resolution_candidates(
+                            raw_discovery=raw_discovery,
+                            discovery=normalized,
+                        )
+                        for resolution_candidate in resolution_candidates:
                             resolution_repo.upsert_candidate(
                                 company_discovery_id=persisted.id,
-                                resolution_type=str(resolution_candidate["resolution_type"]),
-                                platform=str(resolution_candidate["platform"]),
-                                identifier=str(resolution_candidate["identifier"]),
-                                url=str(resolution_candidate["url"]),
-                                confidence=float(resolution_candidate["confidence"]),
+                                resolution_type=resolution_candidate.resolution_type,
+                                platform=resolution_candidate.platform,
+                                identifier=resolution_candidate.identifier,
+                                url=resolution_candidate.url,
+                                confidence=resolution_candidate.confidence,
                                 observed_at=started_at,
                             )
                             summary.total_resolutions += 1

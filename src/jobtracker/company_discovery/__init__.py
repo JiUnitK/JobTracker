@@ -1,17 +1,25 @@
 """Company discovery workflow package."""
 
 from jobtracker.company_discovery.common import (
+    build_query_urls,
     ensure_list_param,
+    fetch_json_url,
     location_matches_query,
+    load_record_items,
     text_matches_query,
     workplace_matches_query,
 )
 from jobtracker.company_discovery.ecosystem_adapter import AustinEcosystemDiscoveryAdapter
 from jobtracker.company_discovery.base import CompanyDiscoveryAdapter
+from jobtracker.company_discovery.directory_adapter import CompanyDirectoryDiscoveryAdapter
 from jobtracker.company_discovery.normalize import (
-    infer_resolution_candidate,
     normalize_company_discovery,
     normalize_company_name,
+)
+from jobtracker.company_discovery.resolution import (
+    ResolutionCandidate,
+    infer_resolution_candidate,
+    infer_resolution_candidates,
 )
 from jobtracker.company_discovery.planner import build_company_discovery_queries
 from jobtracker.company_discovery.registry import (
@@ -27,6 +35,7 @@ from jobtracker.company_discovery.scoring import (
 
 __all__ = [
     "AustinEcosystemDiscoveryAdapter",
+    "CompanyDirectoryDiscoveryAdapter",
     "CompanyDiscoveryAdapter",
     "CompanyDiscoveryRegistry",
     "CompanyDiscoveryScoreResult",
@@ -34,11 +43,16 @@ __all__ = [
     "CompanyDiscoveryRunSummary",
     "CompanyDiscoveryRunner",
     "CompanySearchDiscoveryAdapter",
+    "ResolutionCandidate",
     "build_company_discovery_queries",
     "build_default_company_discovery_registry",
+    "build_query_urls",
     "ensure_list_param",
+    "fetch_json_url",
     "infer_resolution_candidate",
+    "infer_resolution_candidates",
     "location_matches_query",
+    "load_record_items",
     "normalize_company_discovery",
     "normalize_company_name",
     "text_matches_query",

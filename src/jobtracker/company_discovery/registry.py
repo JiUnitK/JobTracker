@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from jobtracker.company_discovery.base import CompanyDiscoveryAdapter
+from jobtracker.company_discovery.directory_adapter import CompanyDirectoryDiscoveryAdapter
 from jobtracker.company_discovery.ecosystem_adapter import AustinEcosystemDiscoveryAdapter
 from jobtracker.company_discovery.search_adapter import CompanySearchDiscoveryAdapter
 
@@ -23,4 +24,5 @@ def build_default_company_discovery_registry() -> CompanyDiscoveryRegistry:
     registry = CompanyDiscoveryRegistry()
     registry.register(CompanySearchDiscoveryAdapter())
     registry.register(AustinEcosystemDiscoveryAdapter())
+    registry.register(CompanyDirectoryDiscoveryAdapter())
     return registry

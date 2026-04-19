@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import re
-from urllib.parse import urlparse
 
 from jobtracker.models import NormalizedCompanyDiscovery, RawCompanyDiscovery
+from jobtracker.company_discovery.resolution import infer_resolution_candidate
 
 
 COMPANY_SUFFIX_PATTERN = re.compile(
@@ -39,36 +39,3 @@ def normalize_company_discovery(discovery: RawCompanyDiscovery) -> NormalizedCom
         workplace_type=discovery.workplace_type,
         evidence_kind=discovery.evidence_kind,
     )
-
-
-def infer_resolution_candidate(discovery: NormalizedCompanyDiscovery) -> dict[str, object] | None:
-    candidate_url = str(discovery.careers_url or discovery.company_url or "")
-    if not candidate_url:
-        return None
-
-    parsed = urlparse(candidate_url)
-    hostname = (parsed.hostname or "").lower()
-    platform = "direct"
-    resolution_type = "company_url"
-    identifier = parsed.path.strip("/") or hostname
-
-    if "greenhouse" in hostname:
-        platform = "greenhouse"
-        resolution_type = "ats_board"
-        identifier = parsed.path.strip("/") or hostname
-    elif "lever.co" in hostname:
-        platform = "lever"
-        resolution_type = "ats_board"
-        identifier = parsed.path.strip("/") or hostname
-    elif "ashbyhq.com" in hostname:
-        platform = "ashby"
-        resolution_type = "ats_board"
-        identifier = parsed.path.strip("/") or hostname
-
-    return {
-        "resolution_type": resolution_type,
-        "platform": platform,
-        "identifier": identifier,
-        "url": candidate_url,
-        "confidence": 0.8 if platform != "direct" else 0.6,
-    }

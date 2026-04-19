@@ -10,12 +10,13 @@ from typer.testing import CliRunner
 from jobtracker.cli.app import app
 from jobtracker.company_discovery.scoring import CompanyDiscoveryScoringService
 from jobtracker.config.loader import load_app_config
-from jobtracker.models import NormalizedCompanyDiscovery, RawCompanyDiscovery
+from jobtracker.models import CompanyRecord, NormalizedCompanyDiscovery, NormalizedJobPosting, RawCompanyDiscovery
 from jobtracker.storage import (
     CompanyDiscoveryObservationRepository,
     CompanyDiscoveryRepository,
     CompanyResolutionRepository,
     CompanyResolutionORM,
+    JobRepository,
     SearchRunRepository,
     create_db_engine,
     get_database_settings,
@@ -136,9 +137,15 @@ def test_discovery_cli_list_and_top_commands(sqlite_database_url: str) -> None:
 
     assert list_result.exit_code == 0
     assert "Pulse Labs | candidate | resolution=resolved" in list_result.stdout
+    assert "sources=company_search" in list_result.stdout
+    assert "best=greenhouse:pulselabs" in list_result.stdout
+    assert "next=promote" in list_result.stdout
     assert "Lakeside Robotics" not in list_result.stdout
     assert top_result.exit_code == 0
-    assert "1. Pulse Labs | resolution=resolved" in top_result.stdout
+    assert "1. Pulse Labs | resolution=resolved | discovery=" in top_result.stdout
+    assert "sources=company_search" in top_result.stdout
+    assert "best=greenhouse:pulselabs" in top_result.stdout
+    assert "next=promote" in top_result.stdout
 
 
 def test_discovery_cli_inbox_is_company_first_entrypoint(sqlite_database_url: str) -> None:
@@ -151,7 +158,78 @@ def test_discovery_cli_inbox_is_company_first_entrypoint(sqlite_database_url: st
 
     assert result.exit_code == 0
     assert "Discovery inbox: candidate=2" in result.stdout
+    assert "ready_to_promote=1" in result.stdout
     assert "Pulse Labs | resolution=resolved" in result.stdout
+    assert "sources=company_search" in result.stdout
+    assert "best=greenhouse:pulselabs" in result.stdout
+    assert "next=promote" in result.stdout
+
+
+def test_discovery_cli_review_command_shows_next_action_and_candidates(sqlite_database_url: str) -> None:
+    _seed_discovery_data(sqlite_database_url)
+
+    result = runner.invoke(
+        app,
+        ["discover", "companies", "review", "--database-url", sqlite_database_url, "--company", "Pulse Labs"],
+    )
+
+    assert result.exit_code == 0
+    assert "Pulse Labs | status=candidate | resolution=resolved" in result.stdout
+    assert "best=greenhouse:pulselabs" in result.stdout
+    assert "next=promote" in result.stdout
+    assert 'Recommended command: python -m jobtracker discover companies promote --company "Pulse Labs"' in result.stdout
+    assert "Resolution candidates:" in result.stdout
+    assert "greenhouse:pulselabs | confidence=0.90 | selected=yes" in result.stdout
+
+
+def test_discovery_cli_review_command_bridges_into_tracked_jobs(sqlite_database_url: str) -> None:
+    _seed_discovery_data(sqlite_database_url)
+    engine = create_db_engine(get_database_settings(sqlite_database_url))
+
+    with Session(engine) as session:
+        discovery_repo = CompanyDiscoveryRepository(session)
+        resolution_repo = CompanyResolutionRepository(session)
+        pulse = discovery_repo.get_by_selector("Pulse Labs")
+        assert pulse is not None
+        selected = resolution_repo.get_selected_for_discovery(pulse.id)
+        assert selected is not None
+        discovery_repo.promote_to_tracked("Pulse Labs", selected_resolution=selected)
+
+        run = SearchRunRepository(session).start(
+            started_at=datetime(2026, 4, 19, 13, 0, tzinfo=timezone.utc)
+        )
+        job = JobRepository(session).upsert(
+            NormalizedJobPosting(
+                source="greenhouse",
+                source_job_id="pulse-job-1",
+                source_url="https://boards.greenhouse.io/pulselabs/jobs/1",
+                canonical_key="pulselabs:backend-engineer:remote",
+                title="Backend Engineer",
+                company=CompanyRecord(normalized_name="pulse-labs", display_name="Pulse Labs"),
+                location_text="Remote",
+                workplace_type="remote",
+                status="active",
+            ),
+            seen_at=run.started_at,
+            source="greenhouse",
+            source_job_id="pulse-job-1",
+        )
+        job.fit_score = 84
+        job.hiring_score = 78
+        job.priority_score = 82
+        session.commit()
+
+    result = runner.invoke(
+        app,
+        ["discover", "companies", "review", "--database-url", sqlite_database_url, "--company", "Pulse Labs"],
+    )
+
+    assert result.exit_code == 0
+    assert "Pulse Labs | status=tracked | resolution=resolved" in result.stdout
+    assert "next=review_jobs" in result.stdout
+    assert 'Recommended command: python -m jobtracker jobs top --company "Pulse Labs" --limit 5' in result.stdout
+    assert "Tracked jobs:" in result.stdout
+    assert "Pulse Labs | Backend Engineer | Remote | active | priority=82" in result.stdout
 
 
 def test_discovery_cli_resolve_promote_and_ignore_commands(sqlite_database_url: str) -> None:

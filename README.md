@@ -5,16 +5,19 @@ JobTracker is a local-first tool for discovering companies, promoting the right 
 The intended user journey is:
 
 1. discover promising companies first
-2. resolve and promote the companies worth monitoring
-3. collect jobs from those tracked companies
-4. drill down into the specific roles that are worth attention now
+2. review and resolve the right companies
+3. promote the companies worth monitoring
+4. collect jobs from those tracked companies
+5. drill down into the specific roles that are worth attention now
 
 ## What It Does
 
 JobTracker currently supports:
 
-- company discovery from search-style and ecosystem-style discovery sources
+- autonomous company discovery from enabled search, ecosystem, and directory sources
 - company scoring and resolution status tracking
+- ranked ATS and careers-surface resolution targets for discovered companies
+- company review flow with explicit next actions and resolution candidate visibility
 - promotion of discovered companies into tracked monitoring
 - tracked job collection from Greenhouse, Lever, and Ashby
 - repeated-run job lifecycle tracking
@@ -23,19 +26,20 @@ JobTracker currently supports:
 
 ## Current State
 
-The company-first workflow is in place, but autonomous discovery is not fully there yet.
+The company-first workflow is in place and autonomous discovery is now the front door of the product.
 
 Today:
 
-- JobTracker can score, resolve, promote, and track discovered companies
+- JobTracker can discover companies from enabled discovery sources
+- discovery review shows the best current ATS or careers target for each company candidate
 - promoted companies flow into tracked job monitoring automatically
-- job review works well as a second-layer drill-down from a selected company
+- job review works as a second-layer drill-down from company review
 
 Current limitation:
 
-- day-1 company discovery still requires manually seeding discovery inputs in `config/company_discovery.yaml`
+- discovery still depends on configured discovery sources in [config/company_discovery.yaml](/abs/path/F:/Projects/JobTracker/config/company_discovery.yaml), so completely zero-config discovery is not there yet
 
-The roadmap for removing that manual step lives in [docs/v1-roadmap.md](/abs/path/F:/Projects/JobTracker/docs/v1-roadmap.md).
+The next work is tracked in [docs/v1-roadmap.md](/abs/path/F:/Projects/JobTracker/docs/v1-roadmap.md).
 
 ## Quick Start
 
@@ -54,28 +58,7 @@ python -m jobtracker config validate
 python -m jobtracker db upgrade
 ```
 
-### 3. Add day-1 discovery inputs
-
-Current limitation:
-
-Until autonomous discovery lands, you still need to seed the first set of discovery inputs manually.
-
-Start with company discovery, not tracked job boards.
-
-Edit [config/company_discovery.yaml](/abs/path/F:/Projects/JobTracker/config/company_discovery.yaml) and add discovery evidence to one or both of:
-
-- `company_search.params.results`
-- `austin_ecosystem.params.entries`
-
-Then enable the source(s) you want to use.
-
-The easiest day-1 setup is:
-
-- add a small list of Austin or remote-friendly companies you want to evaluate
-- include careers URLs when you know them
-- prefer ATS-backed careers URLs when possible
-
-### 4. Run company discovery
+### 3. Run autonomous company discovery
 
 ```powershell
 python -m jobtracker discover companies run
@@ -84,18 +67,28 @@ python -m jobtracker discover companies inbox
 
 This is the front door of the product.
 
-### 5. Review the discovery layer
+If discovery returns little or nothing, that usually means your discovery sources in [config/company_discovery.yaml](/abs/path/F:/Projects/JobTracker/config/company_discovery.yaml) still need better source URLs or query templates.
+
+### 4. Review the discovery layer
 
 Use these views first:
 
 ```powershell
 python -m jobtracker discover companies top --limit 10
+python -m jobtracker discover companies review --company "Pulse Labs"
 python -m jobtracker discover companies list --resolution-status resolved --limit 15
 ```
 
 At this stage, the goal is not to review every job. The goal is to decide which companies deserve tracking.
 
-### 6. Promote the companies worth monitoring
+The `review` command is the best single-company bridge in the workflow. It shows:
+
+- the company's current status and best resolution target
+- the next action to take
+- the resolution candidates currently on record
+- tracked jobs inline when the company has already been promoted
+
+### 5. Resolve, promote, or ignore companies
 
 If a company already has a good Greenhouse, Lever, or Ashby resolution:
 
@@ -116,7 +109,7 @@ If a company is not relevant:
 python -m jobtracker discover companies ignore --company "Lakeside Robotics"
 ```
 
-### 7. Run tracked job collection
+### 6. Run tracked job collection
 
 Once you have promoted at least one company, collect tracked jobs:
 
@@ -126,13 +119,14 @@ python -m jobtracker run
 
 Promotion is DB-backed, so promoted companies can flow into tracked monitoring without manually editing `config/sources.yaml` first.
 
-### 8. Drill down into jobs from tracked companies
+### 7. Drill down into jobs from tracked companies
 
 This is the second layer of the workflow.
 
 For one company:
 
 ```powershell
+python -m jobtracker discover companies review --company "Pulse Labs"
 python -m jobtracker jobs list --company "Pulse Labs" --sort-by priority --limit 10
 python -m jobtracker jobs top --company "Pulse Labs" --limit 5
 ```
@@ -149,7 +143,7 @@ python -m jobtracker companies list --recent-days 14 --limit 20
 
 The README is intentionally focused on getting a user through day 1:
 
-- populate discovery inputs
+- run company discovery
 - review discoveries
 - promote companies
 - collect tracked jobs
@@ -161,7 +155,6 @@ For the recurring workflow after that, use:
 - [docs/workflow-review-checklist.md](/abs/path/F:/Projects/JobTracker/docs/workflow-review-checklist.md)
 
 That documentation covers the day-to-day and week-to-week cadence after the initial setup.
-The roadmap for replacing manual discovery seeding with autonomous company discovery lives in [docs/v1-roadmap.md](/abs/path/F:/Projects/JobTracker/docs/v1-roadmap.md).
 
 ## Config Notes
 
@@ -173,16 +166,25 @@ Tracked ATS source identifiers in [config/sources.yaml](/abs/path/F:/Projects/Jo
 
 Discovery inputs in [config/company_discovery.yaml](/abs/path/F:/Projects/JobTracker/config/company_discovery.yaml):
 
-- `company_search.params.results`: search-style discovery evidence
-- `austin_ecosystem.params.entries`: ecosystem-list discovery evidence
+- `company_search.params.results_urls`: fetchable search-style discovery inputs
+- `company_search.params.query_url_template`: query-driven search endpoint template
+- `austin_ecosystem.params.entries_urls`: fetchable ecosystem-list discovery inputs
+- `austin_ecosystem.params.query_url_template`: query-driven ecosystem endpoint template
+- `company_directory.params.entries_urls`: fetchable directory-style discovery inputs
+- `company_directory.params.query_url_template`: query-driven directory endpoint template
+- `company_search.params.results`: seeded fallback search-style discovery evidence
+- `austin_ecosystem.params.entries`: seeded fallback ecosystem-list discovery evidence
+- `company_directory.params.entries`: seeded fallback directory-style discovery evidence
 
 Profile tuning lives in [config/profile.yaml](/abs/path/F:/Projects/JobTracker/config/profile.yaml).
 
 ## Useful Commands
 
 ```powershell
+python -m jobtracker discover companies run
 python -m jobtracker discover companies inbox
 python -m jobtracker discover companies top
+python -m jobtracker discover companies review --company "Pulse Labs"
 python -m jobtracker discover companies promote --company "Pulse Labs"
 python -m jobtracker run
 python -m jobtracker jobs list --company "Pulse Labs"
