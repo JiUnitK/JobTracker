@@ -2,64 +2,101 @@
 
 ## Goal
 
-Use JobTracker as a lightweight recurring system for:
+Use JobTracker as a recurring, company-first workflow for:
 
-- discovering new opportunities
-- tracking companies with sustained hiring activity
-- reviewing which roles are worth attention now
-- noticing when roles go stale or disappear
+- discovering promising companies
+- deciding which companies deserve active monitoring
+- collecting jobs from those tracked companies
+- drilling down into specific roles only after a company has earned attention
+- reviewing company and job movement over time
 
-This guide is intentionally practical. It assumes the tool is running locally and that the main workflow is CLI-first.
-
-## Before You Start
-
-Make sure these are in place:
-
-1. Source identifiers are configured in [config/sources.yaml](/abs/path/F:/Projects/JobTracker/config/sources.yaml)
-2. Your profile preferences are reasonably current in [config/profile.yaml](/abs/path/F:/Projects/JobTracker/config/profile.yaml)
-3. The database schema is current
-
-```powershell
-python -m jobtracker db upgrade
-```
-
-Useful commands to sanity-check setup:
-
-```powershell
-python -m jobtracker config validate
-python -m jobtracker sources list
-```
+This guide picks up after day 1 onboarding. The README covers day 1. This document covers what the workflow looks like after that.
 
 ## Core Idea
 
-Treat JobTracker as a review tool, not just a scraper.
+Treat company discovery as the top of the funnel and job review as the deeper layer.
 
 The recurring loop is:
 
-1. run collection
-2. review top jobs
-3. review company activity
-4. review stale/closed movement
-5. export a report when you want a durable snapshot
-6. tune profile and source config based on what you learned
+1. run company discovery
+2. review the discovery inbox
+3. resolve, promote, or ignore companies
+4. run tracked job collection
+5. drill down into jobs for the companies that matter
+6. review the broader tracked-job shortlist
+7. export a snapshot when helpful
+8. tune config based on what you learned
 
 ## Daily Workflow
 
-The daily workflow is meant to be short, roughly 5-15 minutes.
+The daily workflow should be short, roughly 5-15 minutes.
 
-### 1. Run collection
+### 1. Run company discovery
+
+```powershell
+python -m jobtracker discover companies run
+```
+
+### 2. Open the discovery inbox
+
+```powershell
+python -m jobtracker discover companies inbox
+```
+
+This should be the default entry point.
+
+What to look for:
+
+- companies with strong `discovery_score`
+- discoveries that already have `resolution=resolved`
+- repeated appearances across discovery sources
+- obvious ignores you can clear out quickly
+
+### 3. Resolve, promote, or ignore discoveries
+
+If a company looks promising and already has a strong ATS resolution:
+
+```powershell
+python -m jobtracker discover companies promote --company "Pulse Labs"
+```
+
+If you need to choose a specific resolution first:
+
+```powershell
+python -m jobtracker discover companies resolve --company "ConflictCo" --resolution-url "https://jobs.lever.co/conflictco"
+python -m jobtracker discover companies promote --company "ConflictCo"
+```
+
+If a company is not relevant:
+
+```powershell
+python -m jobtracker discover companies ignore --company "Lakeside Robotics"
+```
+
+### 4. Run tracked job collection
 
 ```powershell
 python -m jobtracker run
 ```
 
-If a live source is unavailable, check:
+If a tracked source is unavailable, check:
 
 ```powershell
 python -m jobtracker sources list
 ```
 
-### 2. Review top remote or Austin roles
+### 5. Drill down into jobs for the companies that earned attention
+
+This is the deeper layer of the workflow.
+
+For one company:
+
+```powershell
+python -m jobtracker jobs list --company "Pulse Labs" --sort-by priority --limit 10
+python -m jobtracker jobs top --company "Pulse Labs" --limit 5
+```
+
+### 6. Review the broader tracked-job shortlist
 
 For remote:
 
@@ -76,52 +113,75 @@ python -m jobtracker jobs list --location "Austin" --sort-by priority --limit 15
 What to look for:
 
 - strong `priority_score`
-- jobs with good fit but fresh hiring signals
-- companies showing up repeatedly across days
+- jobs with good fit and fresh hiring signals
+- tracked companies that keep producing attractive roles
 
-### 3. Review newly relevant jobs
-
-Use a recent window to focus on what changed recently:
+### 7. Review recent job movement
 
 ```powershell
 python -m jobtracker jobs list --recent-days 3 --sort-by recent --limit 20
 ```
 
-This is the best quick “what is new?” view right now.
-
-### 4. Review stale jobs
-
-This helps you avoid chasing opportunities that are aging out:
+### 8. Review stale or closed jobs
 
 ```powershell
 python -m jobtracker jobs list --status stale --sort-by recent --limit 20
-```
-
-If you want to see what is effectively gone:
-
-```powershell
 python -m jobtracker jobs list --status closed --limit 20
 ```
 
-### 5. Review company momentum
+### 9. Review company momentum
 
 ```powershell
 python -m jobtracker companies list --recent-days 14 --limit 20
 ```
 
-This is useful for spotting companies that may deserve broader attention even if one specific job is not perfect.
-
 ## Weekly Workflow
 
-The weekly workflow is meant to be a more deliberate review, roughly 20-40 minutes.
+The weekly workflow is meant to be more deliberate, roughly 20-40 minutes.
 
-### 1. Run a fresh collection pass
+### 1. Run discovery first
+
+```powershell
+python -m jobtracker discover companies run
+python -m jobtracker discover companies inbox --limit 20
+```
+
+### 2. Review and triage the discovery layer
+
+```powershell
+python -m jobtracker discover companies top --limit 25
+python -m jobtracker discover companies list --resolution-status resolved --limit 20
+```
+
+Suggested questions:
+
+- Which companies keep reappearing strongly enough to deserve monitoring?
+- Which discoveries can be promoted now?
+- Which discoveries should be ignored so they stop cluttering review?
+
+### 3. Promote or ignore discoveries
+
+```powershell
+python -m jobtracker discover companies promote --company "Pulse Labs"
+python -m jobtracker discover companies ignore --company "Lakeside Robotics"
+```
+
+### 4. Run tracked job collection
 
 ```powershell
 python -m jobtracker run
 ```
 
-### 2. Review the best current shortlist
+### 5. Drill down into jobs for tracked companies that matter most
+
+If a promoted or already-tracked company deserves closer review:
+
+```powershell
+python -m jobtracker jobs list --company "Pulse Labs" --sort-by priority --limit 10
+python -m jobtracker jobs top --company "Pulse Labs" --limit 5
+```
+
+### 6. Review the broad tracked-job shortlist
 
 ```powershell
 python -m jobtracker jobs top --limit 25
@@ -129,55 +189,13 @@ python -m jobtracker jobs top --remote-only --limit 15
 python -m jobtracker jobs list --location "Austin" --min-score 60 --limit 20
 ```
 
-Suggested questions:
-
-- Which roles still look attractive after a week?
-- Which companies keep appearing with strong hiring signals?
-- Are there companies you should start tracking even before a perfect role appears?
-
-### 3. Review company activity
+### 7. Review company activity
 
 ```powershell
 python -m jobtracker companies list --recent-days 30 --limit 25
 ```
 
-This is where company-level tracking becomes especially useful.
-
-### 4. Review new company discoveries
-
-```powershell
-python -m jobtracker discover companies top --limit 15
-python -m jobtracker discover companies list --resolution-status resolved --limit 20
-```
-
-Suggested questions:
-
-- Which newly discovered companies look worth tracking even if no single job is perfect yet?
-- Which discoveries already have a strong ATS resolution and can move into monitoring?
-- Which companies should be ignored so they stop taking review time?
-
-### 5. Promote or ignore discoveries
-
-If a company looks promising and already resolves to Greenhouse, Lever, or Ashby, promote it into tracked monitoring:
-
-```powershell
-python -m jobtracker discover companies promote --company "Pulse Labs"
-```
-
-If a discovery has multiple competing resolutions, explicitly choose one first:
-
-```powershell
-python -m jobtracker discover companies resolve --company "ConflictCo" --resolution-url "https://jobs.lever.co/conflictco"
-python -m jobtracker discover companies promote --company "ConflictCo"
-```
-
-If a discovery is not relevant, ignore it:
-
-```powershell
-python -m jobtracker discover companies ignore --company "Lakeside Robotics"
-```
-
-### 6. Export a weekly snapshot
+### 8. Export a weekly snapshot
 
 CSV for spreadsheet-style review:
 
@@ -191,56 +209,44 @@ Markdown for a compact review artifact:
 python -m jobtracker export markdown --output reports/weekly-jobs.md --limit 25
 ```
 
-### 7. Tune your configuration
+### 9. Tune your configuration
 
 At the end of the weekly review, update config based on what you learned:
 
-- add or remove source identifiers in [config/sources.yaml](/abs/path/F:/Projects/JobTracker/config/sources.yaml)
-- use company discovery promotion for ATS-backed companies you want monitored without manually editing source lists first
+- use discovery promotion for ATS-backed companies you want monitored without manually editing source lists first
+- add or remove source identifiers in [config/sources.yaml](/abs/path/F:/Projects/JobTracker/config/sources.yaml) when you want broader direct tracked coverage
 - refine target titles and skills in [config/profile.yaml](/abs/path/F:/Projects/JobTracker/config/profile.yaml)
 - adjust weighting in [config/scoring.yaml](/abs/path/F:/Projects/JobTracker/config/scoring.yaml) if the ranking feels off
 
-## How To Read Scores
-
-### Fit Score
-
-This answers:
-
-- how well does this role match the target profile?
-
-High fit usually means:
-
-- title alignment
-- preferred skills show up
-- location/workplace arrangement matches preferences
-- seniority looks right
-
-### Hiring Score
-
-This answers:
-
-- how active does the hiring signal look?
-
-High hiring usually means:
-
-- fresh posting or recent observation
-- repeated observations across runs
-- multiple related openings at the same company
-- a high-confidence ATS source
-
-### Priority Score
-
-This is the main ranking score.
-
-Interpret it as:
-
-- the best single score for deciding what to review first
-
 ## Recommended Review Views
 
-Use these as your default “muscle memory” commands.
+Use these as your default muscle-memory commands.
 
-### Daily shortlist
+### Discovery inbox
+
+```powershell
+python -m jobtracker discover companies inbox --limit 10
+```
+
+### Discovery shortlist
+
+```powershell
+python -m jobtracker discover companies top --limit 10
+```
+
+### Resolved discovery candidates
+
+```powershell
+python -m jobtracker discover companies list --resolution-status resolved --limit 15
+```
+
+### Company drill-down
+
+```powershell
+python -m jobtracker jobs list --company "Pulse Labs" --sort-by priority --limit 10
+```
+
+### Daily shortlist across tracked companies
 
 ```powershell
 python -m jobtracker jobs top --limit 10
@@ -258,7 +264,7 @@ python -m jobtracker jobs top --remote-only --limit 10
 python -m jobtracker jobs list --location "Austin" --sort-by priority --limit 15
 ```
 
-### Recent changes
+### Recent job changes
 
 ```powershell
 python -m jobtracker jobs list --recent-days 7 --sort-by recent --limit 20
@@ -276,53 +282,22 @@ python -m jobtracker jobs list --status stale --limit 20
 python -m jobtracker companies list --recent-days 14 --limit 20
 ```
 
-### Discovery review
-
-```powershell
-python -m jobtracker discover companies top --limit 10
-```
-
-### Resolved discovery candidates
-
-```powershell
-python -m jobtracker discover companies list --resolution-status resolved --limit 15
-```
-
 ## Lightweight Scheduling
 
 For a simple recurring workflow on Windows, use Task Scheduler to run:
 
 ```powershell
+python -m jobtracker discover companies run
 python -m jobtracker run
 ```
 
 Suggested cadence:
 
-- daily if you want an active search rhythm
+- daily if you want an active discovery rhythm
 - two or three times per week if you want lower maintenance
 - weekly at minimum if you mostly care about company momentum and broad opportunity tracking
 
-The reporting commands do not need to be scheduled automatically at first. It is usually better to run them when you sit down to review.
-
-## When To Update Config
-
-Update [config/profile.yaml](/abs/path/F:/Projects/JobTracker/config/profile.yaml) when:
-
-- too many low-fit roles appear near the top
-- a new target role family becomes relevant
-- your location preferences change
-- you discover useful or noisy keywords
-
-Update [config/sources.yaml](/abs/path/F:/Projects/JobTracker/config/sources.yaml) when:
-
-- you want to watch more companies on Greenhouse, Lever, or Ashby
-- a source is noisy and should be disabled temporarily
-- you want to expand the set of tracked company boards
-
-Update [config/scoring.yaml](/abs/path/F:/Projects/JobTracker/config/scoring.yaml) when:
-
-- the ranking is technically correct but not practically helpful
-- you care more about fit than urgency, or vice versa
+The reporting commands usually do not need to be scheduled automatically at first. It is better to run them when you sit down to review.
 
 ## Friction Checklist
 
@@ -332,6 +307,7 @@ As you use the workflow in practice, pay attention to:
 - views you wish existed but do not
 - places where score explanations are not intuitive
 - exports that still need manual cleanup
-- cases where stale/closed behavior feels wrong
+- cases where stale or closed behavior feels wrong
+- moments where the jump from company discovery to company-specific job review feels clumsy
 
 Those are good candidates for future workflow improvements or Milestone 8B hardening work.
