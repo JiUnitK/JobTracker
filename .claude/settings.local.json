@@ -1,7 +1,18 @@
 {
   "permissions": {
     "allow": [
-      "Bash(xargs head *)"
+      "Bash(xargs head *)",
+      "Bash(python -m pip install -e .[dev])",
+      "Bash(python -m jobtracker config validate)",
+      "Bash(python -m jobtracker db upgrade)",
+      "Bash(python -m jobtracker discover companies run)",
+      "Bash(python -m jobtracker discover companies inbox)",
+      "Bash(python -m jobtracker discover companies top --limit 10)",
+      "Bash(python -m jobtracker discover companies review --company \"Linear\")",
+      "Bash(python -m jobtracker discover companies promote --company \"Linear\")",
+      "Bash(python -m jobtracker run)",
+      "Bash(python -c ' *)",
+      "Bash(python -m jobtracker jobs list --company \"Linear\" --sort-by priority --limit 10)"
     ]
   }
 }

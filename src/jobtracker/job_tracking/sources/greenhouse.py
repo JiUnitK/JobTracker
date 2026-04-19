@@ -46,7 +46,7 @@ class GreenhouseAdapter(SourceAdapter):
     ) -> list[RawJobPosting]:
         jobs: list[RawJobPosting] = []
         company_name = display_name_from_token(board_token)
-        for job_payload in payload.get("jobs", []):
+        for job_payload in (payload.get("jobs") or []):
             raw_job = RawJobPosting(
                 source=self.source_name,
                 source_job_id=str(job_payload["id"]),
@@ -55,7 +55,7 @@ class GreenhouseAdapter(SourceAdapter):
                 company_name=company_name,
                 location_text=(job_payload.get("location") or {}).get("name"),
                 workplace_type=infer_workplace_type(
-                    " ".join(str(item.get("value", "")) for item in job_payload.get("metadata", [])),
+                    " ".join(str(item.get("value", "")) for item in (job_payload.get("metadata") or [])),
                     (job_payload.get("location") or {}).get("name"),
                 ),
                 posted_at=parse_datetime(job_payload.get("updated_at")),
@@ -70,7 +70,7 @@ class GreenhouseAdapter(SourceAdapter):
         return jobs
 
     def _extract_metadata_value(self, payload: dict[str, Any], name: str) -> str | None:
-        for item in payload.get("metadata", []):
+        for item in (payload.get("metadata") or []):
             if item.get("name") == name and item.get("value"):
                 return str(item["value"])
         return None
@@ -78,7 +78,7 @@ class GreenhouseAdapter(SourceAdapter):
     def _extract_tags(self, payload: dict[str, Any]) -> list[str]:
         tags: list[str] = []
         for key in ("departments", "offices"):
-            for item in payload.get(key, []):
+            for item in (payload.get(key) or []):
                 name = item.get("name")
                 if name:
                     tags.append(str(name))
