@@ -12,6 +12,12 @@ Use JobTracker as a recurring, company-first workflow for:
 
 This guide picks up after day 1 onboarding. The README covers day 1. This document covers what the workflow looks like after that.
 
+Current limitation:
+
+- company discovery still begins from manually seeded discovery inputs in `config/company_discovery.yaml`
+
+The roadmap for removing that manual step is in [v1-roadmap.md](/abs/path/F:/Projects/JobTracker/docs/v1-roadmap.md).
+
 ## Core Idea
 
 Treat company discovery as the top of the funnel and job review as the deeper layer.

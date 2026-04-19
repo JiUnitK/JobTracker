@@ -21,6 +21,22 @@ JobTracker currently supports:
 - explainable scoring for jobs and discovered companies
 - CLI reporting for discoveries, companies, and jobs
 
+## Current State
+
+The company-first workflow is in place, but autonomous discovery is not fully there yet.
+
+Today:
+
+- JobTracker can score, resolve, promote, and track discovered companies
+- promoted companies flow into tracked job monitoring automatically
+- job review works well as a second-layer drill-down from a selected company
+
+Current limitation:
+
+- day-1 company discovery still requires manually seeding discovery inputs in `config/company_discovery.yaml`
+
+The roadmap for removing that manual step lives in [docs/v1-roadmap.md](/abs/path/F:/Projects/JobTracker/docs/v1-roadmap.md).
+
 ## Quick Start
 
 This quick start is meant to be day 1 of a daily or weekly cadence.
@@ -39,6 +55,10 @@ python -m jobtracker db upgrade
 ```
 
 ### 3. Add day-1 discovery inputs
+
+Current limitation:
+
+Until autonomous discovery lands, you still need to seed the first set of discovery inputs manually.
 
 Start with company discovery, not tracked job boards.
 
@@ -141,6 +161,7 @@ For the recurring workflow after that, use:
 - [docs/workflow-review-checklist.md](/abs/path/F:/Projects/JobTracker/docs/workflow-review-checklist.md)
 
 That documentation covers the day-to-day and week-to-week cadence after the initial setup.
+The roadmap for replacing manual discovery seeding with autonomous company discovery lives in [docs/v1-roadmap.md](/abs/path/F:/Projects/JobTracker/docs/v1-roadmap.md).
 
 ## Config Notes
 
