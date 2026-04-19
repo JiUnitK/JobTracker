@@ -41,6 +41,7 @@ The initial scaffold includes:
 - Scoring engine coverage for fit, hiring, and priority calculations
 - Golden/config-driven scoring coverage plus persistence checks through the run pipeline
 - Reporting CLI coverage for job lists, top jobs, company summaries, and exports
+- Workflow-oriented reporting coverage for status and sort filters used in regular review
 
 ## Expectations for New Work
 

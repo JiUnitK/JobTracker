@@ -57,6 +57,11 @@ python -m jobtracker export csv --output reports/jobs.csv
 python -m jobtracker export markdown --output reports/jobs.md
 ```
 
+Daily and weekly workflow guidance lives in:
+
+- [docs/workflow.md](/abs/path/F:/Projects/JobTracker/docs/workflow.md)
+- [docs/workflow-review-checklist.md](/abs/path/F:/Projects/JobTracker/docs/workflow-review-checklist.md)
+
 Configure source identifiers in `config/sources.yaml`:
 
 - `greenhouse.params.board_tokens`: Greenhouse board tokens such as `stripe`

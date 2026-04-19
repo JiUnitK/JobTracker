@@ -66,6 +66,28 @@ def _seed_report_data(sqlite_database_url: str) -> None:
         austin_job.priority_score = 79
         austin_job.score_payload = {"fit_score": 74, "hiring_score": 88, "priority_score": 79}
 
+        stale_job = job_repo.upsert(
+            NormalizedJobPosting(
+                source="ashby",
+                source_job_id="job-3",
+                source_url="https://jobs.ashbyhq.com/example/jobs/3",
+                canonical_key="example:backend-engineer:onsite",
+                title="Backend Engineer II",
+                company=CompanyRecord(normalized_name="example", display_name="Example"),
+                location_text="Austin, TX",
+                workplace_type="onsite",
+                status="stale",
+            ),
+            seen_at=datetime(2026, 4, 10, 10, 0, tzinfo=timezone.utc),
+            source="ashby",
+            source_job_id="job-3",
+        )
+        stale_job.current_status = "stale"
+        stale_job.fit_score = 65
+        stale_job.hiring_score = 40
+        stale_job.priority_score = 56
+        stale_job.score_payload = {"fit_score": 65, "hiring_score": 40, "priority_score": 56}
+
         session.commit()
 
 
@@ -88,6 +110,25 @@ def test_jobs_list_and_top_commands_apply_filters(sqlite_database_url: str) -> N
     assert "1. Example | Backend Engineer | Remote | priority=80" in top_result.stdout
 
 
+def test_jobs_commands_support_status_and_sort_filters(sqlite_database_url: str) -> None:
+    _seed_report_data(sqlite_database_url)
+
+    stale_result = runner.invoke(
+        app,
+        ["jobs", "list", "--database-url", sqlite_database_url, "--status", "stale"],
+    )
+    fit_sorted_result = runner.invoke(
+        app,
+        ["jobs", "top", "--database-url", sqlite_database_url, "--sort-by", "fit", "--limit", "1"],
+    )
+
+    assert stale_result.exit_code == 0
+    assert "Backend Engineer II" in stale_result.stdout
+    assert "Backend Engineer | Remote" not in stale_result.stdout
+    assert fit_sorted_result.exit_code == 0
+    assert "1. Example | Backend Engineer | Remote | priority=80" in fit_sorted_result.stdout
+
+
 def test_companies_list_shows_rollup_summary(sqlite_database_url: str) -> None:
     _seed_report_data(sqlite_database_url)
 
@@ -97,7 +138,7 @@ def test_companies_list_shows_rollup_summary(sqlite_database_url: str) -> None:
     )
 
     assert result.exit_code == 0
-    assert "Example | active=2 | recent=0" in result.stdout or "Example | active=2 | recent=2" in result.stdout
+    assert "Example | active=2 | recent=3" in result.stdout
 
 
 def test_export_commands_write_csv_and_markdown(

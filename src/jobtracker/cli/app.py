@@ -171,6 +171,8 @@ def list_jobs(
     remote_only: bool = typer.Option(False, "--remote-only", help="Show remote-only jobs."),
     recent_days: int = typer.Option(0, "--recent-days", help="Only include jobs seen in the last N days."),
     min_score: int = typer.Option(0, "--min-score", help="Minimum priority score."),
+    status: str = typer.Option("", "--status", help="Filter by lifecycle status: active, stale, closed, unknown."),
+    sort_by: str = typer.Option("priority", "--sort-by", help="Sort by priority, fit, hiring, or recent."),
     limit: int = typer.Option(20, "--limit", help="Maximum number of jobs to display."),
 ) -> None:
     """List tracked jobs with scores and lifecycle status."""
@@ -180,7 +182,9 @@ def list_jobs(
         remote_only=remote_only,
         recent_days=recent_days or None,
         min_score=min_score or None,
+        status=status or None,
         limit=limit,
+        sort_by=sort_by,
     )
     with session_factory() as session:
         jobs = ReportingService(session).list_jobs(filters)
@@ -210,6 +214,8 @@ def top_jobs(
     remote_only: bool = typer.Option(False, "--remote-only", help="Show remote-only jobs."),
     recent_days: int = typer.Option(0, "--recent-days", help="Only include jobs seen in the last N days."),
     min_score: int = typer.Option(0, "--min-score", help="Minimum priority score."),
+    status: str = typer.Option("", "--status", help="Filter by lifecycle status: active, stale, closed, unknown."),
+    sort_by: str = typer.Option("priority", "--sort-by", help="Sort by priority, fit, hiring, or recent."),
     limit: int = typer.Option(10, "--limit", help="Maximum number of jobs to display."),
 ) -> None:
     """Show the top-ranked jobs by priority score."""
@@ -218,8 +224,9 @@ def top_jobs(
         remote_only=remote_only,
         recent_days=recent_days or None,
         min_score=min_score or None,
+        status=status or None,
         limit=limit,
-        sort_by="priority",
+        sort_by=sort_by,
     )
     with session_factory() as session:
         jobs = ReportingService(session).list_jobs(filters)

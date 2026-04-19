@@ -16,7 +16,8 @@ Overall progress:
 - Milestone 5 is complete
 - Milestone 6 is complete
 - Milestone 7 is complete
-- Milestone 8 is next
+- Milestone 8A is complete
+- Milestone 8B is next
 
 Completed so far:
 
@@ -45,6 +46,7 @@ Completed so far:
 - Persisted job scoring with fit, hiring, and priority scores
 - Score explanation payloads and scoring-focused regression coverage
 - Reporting CLI for jobs, companies, CSV, and Markdown exports
+- Daily/weekly workflow documentation and workflow-oriented reporting refinements
 
 Current verification baseline:
 
@@ -438,11 +440,55 @@ Exit criteria:
 - [x] The CLI produces useful ranked outputs
 - [x] Exported reports can be used without manual cleanup
 
-## Milestone 8: Hardening and Operational Quality
+## Milestone 8A: Workflow and Usability
 
 Objective:
 
-Improve maintainability, resilience, and day-to-day usability once the main workflow exists.
+Make JobTracker easy to use in a real daily or weekly workflow for tracking companies and jobs.
+
+Status:
+
+- Complete
+
+Deliverables:
+
+- [x] Clear daily workflow documentation
+- [x] Clear weekly review workflow documentation
+- [x] Practical CLI/report usage guidance
+- [x] Workflow-oriented usability improvements
+- [x] Documentation for recurring usage and score interpretation
+
+Concrete tasks:
+
+- [x] Document a recommended daily workflow
+- [x] Document a recommended weekly workflow
+- [x] Define how to review:
+  - newly discovered jobs
+  - rising-priority jobs
+  - companies with sustained hiring activity
+  - jobs that went stale or closed
+- [x] Add or refine CLI/report commands where the workflow exposes friction
+- [x] Document how to run recurring collection locally
+- [x] Document how to interpret fit, hiring, and priority scores
+- [x] Document how to update source identifiers and profile settings during regular use
+
+Testing tasks:
+
+- [x] CLI output tests for workflow-oriented commands
+- [x] Export/report tests for recurring review artifacts
+- [x] Documentation review checklist against the real workflow
+
+Exit criteria:
+
+- [x] A user can follow the documented workflow to review jobs and companies on a daily or weekly cadence
+- [x] The workflow is supported by the current CLI and export outputs without awkward manual steps
+- [x] The documentation is concrete enough to use the tool consistently in practice
+
+## Milestone 8B: Hardening and Operational Quality
+
+Objective:
+
+Improve maintainability, resilience, and operational robustness after using the workflow in practice and surfacing the real friction points.
 
 Deliverables:
 
@@ -458,7 +504,7 @@ Concrete tasks:
 - Improve structured logging around failures
 - Add rate-limit friendly fetch behavior where needed
 - Add data cleanup utilities if necessary
-- Document how to schedule recurring runs
+- Document how to schedule recurring runs in a more production-ready way
 - Document how to add a new adapter
 
 Testing tasks:
@@ -610,9 +656,9 @@ Mitigation:
 
 The best next implementation steps are:
 
-1. Improve failure handling around live source runs and partial source outages
-2. Add timeout/retry policies and source-level diagnostics
-3. Document recurring scheduling and adapter authoring workflows
-4. Add operational hardening tests for error paths where practical
+1. Define the recommended daily and weekly JobTracker workflow
+2. Add any missing commands or exports needed to support that workflow cleanly
+3. Write practical workflow documentation around review, triage, and follow-up
+4. Use that workflow in practice before prioritizing Milestone 8B hardening work
 
 This order gives the project a stable base so future source and scoring work can be added without repeatedly backtracking to fix structural issues.

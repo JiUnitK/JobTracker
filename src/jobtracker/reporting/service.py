@@ -22,6 +22,7 @@ class JobReportFilters:
     remote_only: bool = False
     recent_days: int | None = None
     min_score: int | None = None
+    status: str | None = None
     limit: int = 20
     sort_by: str = "priority"
 
@@ -106,6 +107,8 @@ class ReportingService:
         if filters.remote_only and (job.workplace_type or "").lower() != "remote":
             return False
         if filters.min_score is not None and (job.priority_score or 0) < filters.min_score:
+            return False
+        if filters.status and (job.current_status or "").lower() != filters.status.lower():
             return False
         if filters.recent_days is not None:
             cutoff = to_utc_naive(utc_now() - timedelta(days=filters.recent_days))
