@@ -20,7 +20,7 @@ from jobtracker.config.models import (
 def _load_dotenv(path: Path) -> None:
     if not path.exists():
         return
-    with path.open(encoding="utf-8") as f:
+    with path.open(encoding="utf-8-sig") as f:
         for line in f:
             line = line.strip()
             if not line or line.startswith("#") or "=" not in line:
