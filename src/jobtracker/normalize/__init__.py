@@ -1,4 +1,7 @@
-"""Compatibility exports for job normalization helpers."""
+"""Compatibility exports for tracked-job normalization helpers.
+
+New code should import from :mod:`jobtracker.job_tracking.normalize`.
+"""
 
 from jobtracker.job_tracking.normalize import (
     build_canonical_key,

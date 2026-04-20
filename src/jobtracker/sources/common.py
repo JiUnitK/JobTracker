@@ -1,4 +1,7 @@
-"""Compatibility shim for job source helpers."""
+"""Compatibility shim for tracked-job source helpers.
+
+New code should import from :mod:`jobtracker.job_tracking.sources.common`.
+"""
 
 from jobtracker.job_tracking.sources.common import (
     display_name_from_token,

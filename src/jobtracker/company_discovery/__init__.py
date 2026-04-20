@@ -1,4 +1,10 @@
-"""Company discovery workflow package."""
+"""Company-first discovery, resolution, and promotion workflow.
+
+This package owns discovering companies, resolving their hiring surfaces, and
+promoting selected companies into tracked monitoring. Persisted ATS job
+collection belongs in ``jobtracker.job_tracking``; instant open-web job search
+belongs in ``jobtracker.job_search``.
+"""
 
 from jobtracker.company_discovery.common import (
     build_query_urls,
