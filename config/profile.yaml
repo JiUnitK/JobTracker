@@ -1,20 +1,43 @@
 target_titles:
+  - senior software engineer
+  - senior backend engineer
+  - senior infrastructure engineer
+  - senior platform engineer
   - backend engineer
   - software engineer
   - platform engineer
+  - infrastructure engineer
+  - systems software engineer
+  - c++ software engineer
+  - data infrastructure engineer
+  - observability engineer
+  - telemetry engineer
   - embedded systems engineer
 preferred_skills:
-  - python
+  - C++
+  - Python
   - distributed systems
-  - api design
-  - cloud infrastructure
+  - data pipelines
+  - observability
+  - APIs
+  - embedded
+  - RTOS
+  - firmware
 preferred_locations:
   - Austin, TX
   - Remote
+  - United States
 target_workplace_types:
   - remote
   - hybrid
 excluded_keywords:
   - intern
+  - internship
+  - new grad
+  - university graduate
+  - frontend only
+  - sales engineer
+  - qa engineer
+  - manual qa
   - principal only
 target_companies: []
