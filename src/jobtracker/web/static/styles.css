@@ -1,14 +1,17 @@
 :root {
-  color-scheme: light;
-  --bg: #f4f6f8;
-  --panel: #ffffff;
-  --ink: #202124;
-  --muted: #62666d;
-  --line: #d7dde2;
-  --accent: #0f766e;
-  --accent-strong: #115e59;
-  --warning: #a15c10;
-  --error: #b42318;
+  color-scheme: dark;
+  --bg: #111827;
+  --panel: #1f2937;
+  --ink: #c9ced6;
+  --muted: #6b7280;
+  --line: #2d3748;
+  --accent: #0e9488;
+  --accent-strong: #0c7a70;
+  --warning: #d97706;
+  --error: #e05252;
+  --header-bg: #162032;
+  --tag-bg: #0f3d3a;
+  --tag-ink: #5ec4b8;
 }
 
 * {
@@ -85,7 +88,7 @@ select {
 }
 
 input:focus {
-  outline: 2px solid rgba(15, 118, 110, 0.22);
+  outline: 2px solid rgba(20, 184, 166, 0.35);
   border-color: var(--accent);
 }
 
@@ -202,8 +205,8 @@ td {
 th {
   position: sticky;
   top: 0;
-  background: #eaf0f2;
-  color: #33363a;
+  background: var(--header-bg);
+  color: var(--muted);
   font-size: 12px;
   text-transform: uppercase;
   z-index: 1;
@@ -230,8 +233,8 @@ td.score {
 .reason {
   padding: 3px 7px;
   border-radius: 999px;
-  background: #e4f3ef;
-  color: #124d45;
+  background: var(--tag-bg);
+  color: var(--tag-ink);
   font-size: 12px;
   white-space: nowrap;
 }
