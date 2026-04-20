@@ -14,9 +14,14 @@ The intended user journey is:
 
 JobTracker currently supports:
 
-- autonomous company discovery from enabled search, ecosystem, and directory sources
+- autonomous company discovery from live and curated sources
+- RemoteOK discovery with no API key
+- Hacker News "Who is hiring?" discovery with no API key
+- SerpAPI Google Jobs discovery when `SERPAPI_KEY` is configured
+- local Austin ecosystem and broader company-directory discovery files
+- ATS fingerprinting for unresolved companies across Greenhouse, Lever, and Ashby
 - company scoring and resolution status tracking
-- ranked ATS and careers-surface resolution targets for discovered companies
+- ranked ATS and careers-surface resolution targets
 - company review flow with explicit next actions and resolution candidate visibility
 - promotion of discovered companies into tracked monitoring
 - tracked job collection from Greenhouse, Lever, and Ashby
@@ -31,13 +36,17 @@ The company-first workflow is in place and autonomous discovery is now the front
 Today:
 
 - JobTracker can discover companies from enabled discovery sources
+- RemoteOK and HN discovery can work without external accounts
+- SerpAPI search discovery works when `SERPAPI_KEY` is available in `.env`
+- curated JSON files provide starter Austin and remote-friendly company coverage
 - discovery review shows the best current ATS or careers target for each company candidate
+- unresolved companies can be fingerprinted against Greenhouse, Lever, and Ashby
 - promoted companies flow into tracked job monitoring automatically
 - job review works as a second-layer drill-down from company review
 
 Current limitation:
 
-- discovery still depends on configured discovery sources in [config/company_discovery.yaml](/abs/path/F:/Projects/JobTracker/config/company_discovery.yaml), so completely zero-config discovery is not there yet
+- discovery quality depends on enabled source quality, API availability, and how well the local curated data files match your target market
 
 The next work is tracked in [docs/v1-roadmap.md](/abs/path/F:/Projects/JobTracker/docs/v1-roadmap.md).
 
@@ -51,14 +60,26 @@ This quick start is meant to be day 1 of a daily or weekly cadence.
 python -m pip install -e .[dev]
 ```
 
-### 2. Validate config and create the database
+### 2. Optional: configure SerpAPI
+
+RemoteOK, HN Who's Hiring, and the local curated JSON feeds do not require an API key.
+
+If you want Google Jobs search discovery too, create a repo-root `.env` file:
+
+```powershell
+SERPAPI_KEY=your_key_here
+```
+
+If you do not want to use SerpAPI yet, set `company_search.enabled: false` in [config/company_discovery.yaml](/abs/path/F:/Projects/JobTracker/config/company_discovery.yaml).
+
+### 3. Validate config and create the database
 
 ```powershell
 python -m jobtracker config validate
 python -m jobtracker db upgrade
 ```
 
-### 3. Run autonomous company discovery
+### 4. Run autonomous company discovery
 
 ```powershell
 python -m jobtracker discover companies run
@@ -67,9 +88,26 @@ python -m jobtracker discover companies inbox
 
 This is the front door of the product.
 
-If discovery returns little or nothing, that usually means your discovery sources in [config/company_discovery.yaml](/abs/path/F:/Projects/JobTracker/config/company_discovery.yaml) still need better source URLs or query templates.
+The default discovery config can pull from:
 
-### 4. Review the discovery layer
+- `remote_ok`: RemoteOK public API
+- `hn_whos_hiring`: HN Algolia API for the monthly Who's Hiring thread
+- `austin_ecosystem`: local Austin company JSON file
+- `company_directory`: local broader company JSON file
+- `company_search`: SerpAPI Google Jobs, when `SERPAPI_KEY` is set
+
+### 5. Improve unresolved companies with ATS fingerprinting
+
+If the inbox contains promising companies with `resolution=unresolved`, run:
+
+```powershell
+python -m jobtracker discover companies fingerprint
+python -m jobtracker discover companies inbox
+```
+
+Fingerprinting probes likely Greenhouse, Lever, and Ashby board URLs and adds resolution candidates when it finds matches.
+
+### 6. Review the discovery layer
 
 Use these views first:
 
@@ -88,7 +126,7 @@ The `review` command is the best single-company bridge in the workflow. It shows
 - the resolution candidates currently on record
 - tracked jobs inline when the company has already been promoted
 
-### 5. Resolve, promote, or ignore companies
+### 7. Resolve, promote, or ignore companies
 
 If a company already has a good Greenhouse, Lever, or Ashby resolution:
 
@@ -109,7 +147,7 @@ If a company is not relevant:
 python -m jobtracker discover companies ignore --company "Lakeside Robotics"
 ```
 
-### 6. Run tracked job collection
+### 8. Run tracked job collection
 
 Once you have promoted at least one company, collect tracked jobs:
 
@@ -119,7 +157,7 @@ python -m jobtracker run
 
 Promotion is DB-backed, so promoted companies can flow into tracked monitoring without manually editing `config/sources.yaml` first.
 
-### 7. Drill down into jobs from tracked companies
+### 9. Drill down into jobs from tracked companies
 
 This is the second layer of the workflow.
 
@@ -144,6 +182,7 @@ python -m jobtracker companies list --recent-days 14 --limit 20
 The README is intentionally focused on getting a user through day 1:
 
 - run company discovery
+- fingerprint unresolved companies when useful
 - review discoveries
 - promote companies
 - collect tracked jobs
@@ -153,8 +192,7 @@ For the recurring workflow after that, use:
 
 - [docs/workflow.md](/abs/path/F:/Projects/JobTracker/docs/workflow.md)
 - [docs/workflow-review-checklist.md](/abs/path/F:/Projects/JobTracker/docs/workflow-review-checklist.md)
-
-That documentation covers the day-to-day and week-to-week cadence after the initial setup.
+- [docs/discovery-sources.md](/abs/path/F:/Projects/JobTracker/docs/discovery-sources.md)
 
 ## Config Notes
 
@@ -164,17 +202,13 @@ Tracked ATS source identifiers in [config/sources.yaml](/abs/path/F:/Projects/Jo
 - `lever.params.account_names`: Lever account names used in `https://api.lever.co/v0/postings/{account}`
 - `ashby.params.job_board_names`: Ashby job board names used in `https://api.ashbyhq.com/posting-api/job-board/{name}`
 
-Discovery inputs in [config/company_discovery.yaml](/abs/path/F:/Projects/JobTracker/config/company_discovery.yaml):
+Discovery sources in [config/company_discovery.yaml](/abs/path/F:/Projects/JobTracker/config/company_discovery.yaml):
 
-- `company_search.params.results_urls`: fetchable search-style discovery inputs
-- `company_search.params.query_url_template`: query-driven search endpoint template
-- `austin_ecosystem.params.entries_urls`: fetchable ecosystem-list discovery inputs
-- `austin_ecosystem.params.query_url_template`: query-driven ecosystem endpoint template
-- `company_directory.params.entries_urls`: fetchable directory-style discovery inputs
-- `company_directory.params.query_url_template`: query-driven directory endpoint template
-- `company_search.params.results`: seeded fallback search-style discovery evidence
-- `austin_ecosystem.params.entries`: seeded fallback ecosystem-list discovery evidence
-- `company_directory.params.entries`: seeded fallback directory-style discovery evidence
+- `company_search`: SerpAPI Google Jobs through `query_url_template`, using `SERPAPI_KEY`
+- `remote_ok`: RemoteOK public API at `https://remoteok.com/api`
+- `hn_whos_hiring`: HN Algolia API, auto-detecting the current monthly thread
+- `austin_ecosystem`: local curated Austin company file
+- `company_directory`: local curated broader company file
 
 Profile tuning lives in [config/profile.yaml](/abs/path/F:/Projects/JobTracker/config/profile.yaml).
 
@@ -182,6 +216,7 @@ Profile tuning lives in [config/profile.yaml](/abs/path/F:/Projects/JobTracker/c
 
 ```powershell
 python -m jobtracker discover companies run
+python -m jobtracker discover companies fingerprint
 python -m jobtracker discover companies inbox
 python -m jobtracker discover companies top
 python -m jobtracker discover companies review --company "Pulse Labs"

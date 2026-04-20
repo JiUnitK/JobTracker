@@ -30,7 +30,7 @@ queries:
       - remote
       - hybrid
 sources:
-  # SerpAPI Google Jobs — requires SERPAPI_KEY in .env
+  # SerpAPI Google Jobs - requires SERPAPI_KEY in .env.
   - name: company_search
     type: search
     enabled: true
@@ -43,7 +43,7 @@ sources:
         title: job_title
         location: location_text
 
-  # RemoteOK public feed — no API key required. Fetches all remote tech jobs and
+  # RemoteOK public feed - no API key required. Fetches all remote tech jobs and
   # filters client-side by configured keywords. All entries are workplace_type=remote.
   - name: remote_ok
     type: aggregator
@@ -51,7 +51,7 @@ sources:
     params:
       feed_url: "https://remoteok.com/api"
 
-  # Hacker News "Who is hiring?" monthly thread — no API key required. Auto-detects
+  # Hacker News "Who is hiring?" monthly thread - no API key required. Auto-detects
   # the current month's thread via HN Algolia. Pin a specific thread with story_id.
   - name: hn_whos_hiring
     type: aggregator

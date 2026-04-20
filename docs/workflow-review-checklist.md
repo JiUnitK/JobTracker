@@ -11,6 +11,7 @@ Use this checklist when validating the documented JobTracker workflow.
 ## Daily Loop
 
 - `python -m jobtracker discover companies run` is the obvious first step
+- `python -m jobtracker discover companies fingerprint` is documented for unresolved companies
 - `python -m jobtracker discover companies inbox` is the obvious first review view
 - `python -m jobtracker discover companies review --company ...` is the obvious single-company review view
 - There is a clear command for resolving, promoting, or ignoring discoveries
@@ -23,12 +24,14 @@ Use this checklist when validating the documented JobTracker workflow.
 ## Weekly Loop
 
 - There is a clear shortlist command for weekly discovery review
+- The weekly loop includes discovery, fingerprinting, and inbox review before job review
 - There is a clear command for reviewing discovered companies
 - The workflow shows how to resolve and promote promising discoveries
 - The workflow makes it clear that company discovery comes before broad job review
 - There is a CSV export path for deeper review
 - There is a Markdown export path for compact snapshots
 - The workflow explains when to update profile, source, and scoring config
+- The workflow points to discovery source tuning when the inbox is too noisy or too thin
 
 ## Usability
 

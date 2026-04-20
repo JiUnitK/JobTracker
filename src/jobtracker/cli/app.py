@@ -525,7 +525,7 @@ def fingerprint_discovered_companies(
     typer.echo(f"Found ATS boards for {len(results)} companies:")
     for name, hits in results.items():
         for hit in hits:
-            typer.echo(f"  {name} → {hit.platform}:{hit.slug} ({hit.board_url})")
+            typer.echo(f"  {name} -> {hit.platform}:{hit.slug} ({hit.board_url})")
 
 
 @discover_companies_app.command("ignore")

@@ -41,7 +41,7 @@ class RemoteOKDiscoveryAdapter(CompanyDiscoveryAdapter):
             if not company_name:
                 continue
 
-            # One discovery per company per run — first matching job wins
+            # One discovery per company per run; first matching job wins.
             company_key = company_name.lower()
             if company_key in seen_companies:
                 continue

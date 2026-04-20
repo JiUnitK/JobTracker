@@ -1,0 +1,123 @@
+# Discovery Sources
+
+Company discovery is the entry point for JobTracker. The default config combines live sources with local curated source files so discovery can find companies before you manually add ATS boards.
+
+## Default Sources
+
+### `company_search`
+
+Purpose:
+
+- query-driven job search discovery
+- best for Austin and remote keyword searches
+
+Default setup:
+
+- uses SerpAPI Google Jobs through `company_search.params.query_url_template`
+- requires `SERPAPI_KEY` in repo-root `.env`
+
+Example `.env`:
+
+```powershell
+SERPAPI_KEY=your_key_here
+```
+
+If you do not want to use SerpAPI yet, set `enabled: false` for `company_search`.
+
+### `remote_ok`
+
+Purpose:
+
+- live remote-job discovery from RemoteOK
+- no API key required
+
+Recommended URL:
+
+```yaml
+feed_url: "https://remoteok.com/api"
+```
+
+This source fetches all remote jobs and filters them locally against your discovery keywords.
+
+### `hn_whos_hiring`
+
+Purpose:
+
+- live company discovery from the monthly Hacker News "Who is hiring?" thread
+- no API key required
+
+Default behavior:
+
+- auto-detects the current thread through HN Algolia
+- fetches comments as structured JSON
+- parses company name, role, location, remote/hybrid signal, and ATS/careers URLs when present
+
+Optional pinning:
+
+```yaml
+params:
+  story_id: "12345678"
+```
+
+Use `story_id` only when you want to force a specific monthly thread.
+
+### `austin_ecosystem`
+
+Purpose:
+
+- local curated Austin company discovery
+- useful for companies that may not appear in live job feeds every day
+
+Recommended URL:
+
+```yaml
+entries_urls:
+  - file:///F:/Projects/JobTracker/config/data/austin_ecosystem.json
+```
+
+Update this JSON file as you learn about Austin companies. Prefer specific ATS URLs in `careers_url` when known.
+
+### `company_directory`
+
+Purpose:
+
+- local curated remote/hybrid-friendly company discovery
+- useful for broader company awareness beyond Austin
+
+Recommended URL:
+
+```yaml
+entries_urls:
+  - file:///F:/Projects/JobTracker/config/data/company_directory.json
+```
+
+Update this JSON file over time as a durable company universe.
+
+## Recommended Starting Setup
+
+For day 1:
+
+- keep `remote_ok` enabled
+- keep `hn_whos_hiring` enabled
+- keep `austin_ecosystem` enabled
+- keep `company_directory` enabled
+- enable `company_search` only if `SERPAPI_KEY` is configured
+
+This gives you useful discovery without needing to manually search for companies first.
+
+## After Discovery
+
+Run:
+
+```powershell
+python -m jobtracker discover companies run
+python -m jobtracker discover companies inbox
+```
+
+If many companies are unresolved, run ATS fingerprinting:
+
+```powershell
+python -m jobtracker discover companies fingerprint
+```
+
+Fingerprinting probes likely Greenhouse, Lever, and Ashby boards for unresolved companies and adds resolution candidates when it finds matches.

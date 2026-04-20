@@ -276,7 +276,7 @@ class ReportingService:
             if first is None or last is None:
                 return False
             # "New" means first and last discovery timestamps are within the same
-            # run — i.e. the company has never been seen in a prior run.
+            # run; i.e. the company has never been seen in a prior run.
             if abs((last - first).total_seconds()) > 5:
                 return False
         return True

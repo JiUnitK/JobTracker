@@ -72,7 +72,7 @@ class ATSFingerprintingService:
     ) -> dict[str, list[FingerprintHit]]:
         """Probe ATS platforms for every unresolved candidate discovery.
 
-        Returns a mapping of normalized_name → list of hits found.
+        Returns a mapping of normalized_name -> list of hits found.
         """
         from sqlalchemy import select
 
