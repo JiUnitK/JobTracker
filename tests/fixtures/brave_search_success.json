@@ -1,0 +1,29 @@
+{
+  "query": {
+    "original": "\"customer success\" Remote job"
+  },
+  "web": {
+    "results": [
+      {
+        "title": "Customer Success Specialist - Example Health",
+        "url": "https://example.com/jobs/1",
+        "description": "Remote role posted 2 days ago",
+        "age": "2 days ago",
+        "profile": {
+          "long_name": "Example Health Careers"
+        }
+      },
+      {
+        "title": "Customer Support Manager | Care Co",
+        "url": "https://care.example.com/jobs/customer-support-manager",
+        "description": "Hybrid role. Posted recently.",
+        "page_age": "2026-04-18T12:00:00Z"
+      },
+      {
+        "title": "",
+        "url": "https://example.com/missing-title",
+        "description": "Skipped because Brave did not include a title."
+      }
+    ]
+  }
+}

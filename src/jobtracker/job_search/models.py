@@ -122,12 +122,16 @@ class InstantJobSearchResult(BaseModel):
 class InstantJobSearchRunSummary(BaseModel):
     requested_queries: list[InstantJobSearchQuery] = Field(default_factory=list)
     results: list[InstantJobSearchResult] = Field(default_factory=list)
+    max_age_days: int = 7
+    include_unknown_age: bool = False
     total_raw_results: int = 0
     skipped_for_age: int = 0
     skipped_for_relevance: int = 0
 
     @model_validator(mode="after")
     def validate_counts(self) -> "InstantJobSearchRunSummary":
+        if self.max_age_days < 1:
+            raise ValueError("max_age_days must be at least 1")
         if self.total_raw_results < 0:
             raise ValueError("total_raw_results cannot be negative")
         if self.skipped_for_age < 0:

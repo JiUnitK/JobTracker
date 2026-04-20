@@ -28,6 +28,7 @@ Current verification baseline:
 
 - `python -m pytest` passes
 - `python -m jobtracker config validate` passes
+- `python -m jobtracker search jobs --help` passes
 - `python -m jobtracker db upgrade` passes
 - `python -m jobtracker discover companies run` passes
 - `python -m jobtracker discover companies fingerprint` passes
@@ -106,6 +107,12 @@ Objective:
 
 Create a separate workflow for fresh posting search without changing company discovery or tracked job collection.
 
+Status:
+
+- Implemented side-effect-light `jobtracker.job_search` foundation with typed request/result models, planner, Brave adapter, normalization, scoring, runner, reporting, registry, and CLI command.
+- Added `python -m jobtracker search jobs` with `--days`, `--query`, `--location`, `--limit`, `--include-unknown-age`, and `--json`.
+- Added fixture/injected-adapter tests for planning, Brave response parsing, missing API-key validation, runner filtering/scoring, and CLI output.
+
 Focus:
 
 - add `job_search` package with models, planner, Brave adapter, normalization, scoring, runner, and reporting
@@ -133,6 +140,14 @@ src/jobtracker/job_search/
 Objective:
 
 Use Brave Search API to retrieve general web results likely to contain current job postings.
+
+Status:
+
+- Hardened the Brave adapter around the documented web search endpoint and `X-Subscription-Token` API key header.
+- Added safe defaults for `count`, `country`, `search_lang`, and `safesearch`, with count clamped to Brave's supported web-search range.
+- Added fixture-based parsing tests for successful, empty, and malformed responses.
+- Added explicit tests for missing `BRAVE_SEARCH_API_KEY`, HTTP errors, network failures, and invalid JSON responses.
+- CLI search now reports adapter/config failures as a concise command error instead of a traceback.
 
 Focus:
 

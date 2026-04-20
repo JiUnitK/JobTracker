@@ -14,6 +14,7 @@ from jobtracker.job_search.models import (
     RawInstantSearchResult,
     SearchProvider,
 )
+from jobtracker.job_search.runner import InstantJobSearchRunner
 
 __all__ = [
     "AgeConfidence",
@@ -23,4 +24,5 @@ __all__ = [
     "InstantJobSearchRunSummary",
     "RawInstantSearchResult",
     "SearchProvider",
+    "InstantJobSearchRunner",
 ]

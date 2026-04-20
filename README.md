@@ -14,6 +14,7 @@ The intended user journey is:
 
 JobTracker currently supports:
 
+- instant open-web job search through Brave Search when `BRAVE_SEARCH_API_KEY` is configured
 - autonomous company discovery from live sources
 - RemoteOK discovery with no API key
 - Hacker News "Who is hiring?" discovery with no API key
@@ -34,6 +35,7 @@ The company-first workflow is in place and autonomous discovery is now the front
 
 Today:
 
+- JobTracker can run a side-effect-light instant search for fresh postings without writing to the database
 - JobTracker can discover companies from enabled discovery sources
 - RemoteOK and HN discovery can work without external accounts
 - SerpAPI search discovery works when `SERPAPI_KEY` is available in `.env`
@@ -44,6 +46,7 @@ Today:
 
 Current limitation:
 
+- instant job search requires `BRAVE_SEARCH_API_KEY` and freshness depends on the age signals exposed by search results
 - discovery quality depends on enabled source quality, API availability, and how well configured queries match your target market
 
 The next work is tracked in [docs/v1-roadmap.md](/abs/path/F:/Projects/JobTracker/docs/v1-roadmap.md).
@@ -58,13 +61,14 @@ This quick start is meant to be day 1 of a daily or weekly cadence.
 python -m pip install -e .[dev]
 ```
 
-### 2. Optional: configure SerpAPI
+### 2. Optional: configure API keys
 
 RemoteOK and HN Who's Hiring do not require an API key.
 
-If you want Google Jobs search discovery too, create a repo-root `.env` file:
+If you want instant open-web job search, add a Brave Search key. If you want Google Jobs company discovery too, add a SerpAPI key:
 
 ```powershell
+BRAVE_SEARCH_API_KEY=your_key_here
 SERPAPI_KEY=your_key_here
 ```
 
@@ -77,7 +81,20 @@ python -m jobtracker config validate
 python -m jobtracker db upgrade
 ```
 
-### 4. Run autonomous company discovery
+### 4. Search fresh postings now
+
+Instant job search is the fastest front door when you want current postings without building a company watchlist first:
+
+```powershell
+python -m jobtracker search jobs
+python -m jobtracker search jobs --days 7 --query "customer success" --location Remote --limit 25
+python -m jobtracker search jobs --include-unknown-age
+python -m jobtracker search jobs --json
+```
+
+This workflow uses [config/search_terms.yaml](/abs/path/F:/Projects/JobTracker/config/search_terms.yaml), [config/sources.yaml](/abs/path/F:/Projects/JobTracker/config/sources.yaml), and [config/profile.yaml](/abs/path/F:/Projects/JobTracker/config/profile.yaml). It returns structured results and does not write to the database by default.
+
+### 5. Run autonomous company discovery
 
 ```powershell
 python -m jobtracker discover companies run
@@ -92,7 +109,7 @@ The default discovery config can pull from:
 - `hn_whos_hiring`: HN Algolia API for the monthly Who's Hiring thread
 - `company_search`: SerpAPI Google Jobs, when `SERPAPI_KEY` is set
 
-### 5. Improve unresolved companies with ATS fingerprinting
+### 6. Improve unresolved companies with ATS fingerprinting
 
 If the inbox contains promising companies with `resolution=unresolved`, run:
 
@@ -103,7 +120,7 @@ python -m jobtracker discover companies inbox
 
 Fingerprinting probes likely Greenhouse, Lever, and Ashby board URLs and adds resolution candidates when it finds matches.
 
-### 6. Review the discovery layer
+### 7. Review the discovery layer
 
 Use these views first:
 
@@ -122,7 +139,7 @@ The `review` command is the best single-company bridge in the workflow. It shows
 - the resolution candidates currently on record
 - tracked jobs inline when the company has already been promoted
 
-### 7. Resolve, promote, or ignore companies
+### 8. Resolve, promote, or ignore companies
 
 If a company already has a good Greenhouse, Lever, or Ashby resolution:
 
@@ -143,7 +160,7 @@ If a company is not relevant:
 python -m jobtracker discover companies ignore --company "Lakeside Robotics"
 ```
 
-### 8. Run tracked job collection
+### 9. Run tracked job collection
 
 Once you have promoted at least one company, collect tracked jobs:
 
@@ -153,7 +170,7 @@ python -m jobtracker run
 
 Promotion is DB-backed, so promoted companies can flow into tracked monitoring without manually editing `config/sources.yaml` first.
 
-### 9. Drill down into jobs from tracked companies
+### 10. Drill down into jobs from tracked companies
 
 This is the second layer of the workflow.
 
@@ -206,11 +223,14 @@ Discovery sources live under `discovery_sources` in [config/sources.yaml](/abs/p
 
 Discovery queries live under `discovery_queries` in [config/search_terms.yaml](/abs/path/F:/Projects/JobTracker/config/search_terms.yaml). Discovered-company scoring lives under `company_discovery` in [config/scoring.yaml](/abs/path/F:/Projects/JobTracker/config/scoring.yaml).
 
+Instant search sources live under `instant_search_sources` in [config/sources.yaml](/abs/path/F:/Projects/JobTracker/config/sources.yaml). Instant search query defaults live under `instant_job_search` in [config/search_terms.yaml](/abs/path/F:/Projects/JobTracker/config/search_terms.yaml).
+
 Profile tuning lives in [config/profile.yaml](/abs/path/F:/Projects/JobTracker/config/profile.yaml).
 
 ## Useful Commands
 
 ```powershell
+python -m jobtracker search jobs
 python -m jobtracker discover companies run
 python -m jobtracker discover companies fingerprint
 python -m jobtracker discover companies inbox

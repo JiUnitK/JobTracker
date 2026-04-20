@@ -6,6 +6,7 @@ from jobtracker import __version__
 from jobtracker.cli.company_discovery import discover_app
 from jobtracker.cli.config import config_app
 from jobtracker.cli.database import db_app
+from jobtracker.cli.job_search import search_app
 from jobtracker.cli.sources import sources_app
 from jobtracker.cli.tracked_jobs import (
     companies_app,
@@ -27,6 +28,7 @@ app.add_typer(jobs_app, name="jobs")
 app.add_typer(companies_app, name="companies")
 app.add_typer(export_app, name="export")
 app.add_typer(discover_app, name="discover")
+app.add_typer(search_app, name="search")
 register_run_command(app)
 
 
