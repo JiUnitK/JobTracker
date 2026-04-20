@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import Any, Callable
 
 from jobtracker.company_discovery.base import CompanyDiscoveryAdapter
@@ -89,9 +90,13 @@ class CompanySearchDiscoveryAdapter(CompanyDiscoveryAdapter):
         if not isinstance(template, str) or not template.strip():
             raise ValueError("company discovery source params.query_url_template must be a non-empty string")
 
+        template = os.path.expandvars(template)
+
         payload_key = source.params.get("results_payload_key", "results")
         if not isinstance(payload_key, str) or not payload_key.strip():
             raise ValueError("company discovery source params.results_payload_key must be a non-empty string")
+
+        field_map: dict[str, str] = source.params.get("field_map", {})
 
         urls = build_query_urls(
             template,
@@ -114,7 +119,8 @@ class CompanySearchDiscoveryAdapter(CompanyDiscoveryAdapter):
                     raise ValueError(
                         f"company discovery payload items from {url} must be mappings"
                     )
-                merged = dict(item)
+                merged = {field_map.get(k, k): v for k, v in item.items()} if field_map else dict(item)
+                merged.setdefault("source_url", url)
                 merged.setdefault(
                     "raw_payload",
                     {
