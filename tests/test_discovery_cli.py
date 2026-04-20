@@ -157,12 +157,13 @@ def test_discovery_cli_inbox_is_company_first_entrypoint(sqlite_database_url: st
     )
 
     assert result.exit_code == 0
-    assert "Discovery inbox: candidate=2" in result.stdout
-    assert "ready_to_promote=1" in result.stdout
-    assert "Pulse Labs | resolution=resolved" in result.stdout
-    assert "sources=company_search" in result.stdout
-    assert "best=greenhouse:pulselabs" in result.stdout
-    assert "next=promote" in result.stdout
+    assert "Discovery Inbox" in result.stdout
+    assert "Summary: 2 candidates, 1 ready to promote, 1 need resolution, 0 tracked" in result.stdout
+    assert "1. Pulse Labs" in result.stdout
+    assert "Next:       Promote" in result.stdout
+    assert "Resolution: resolved | best greenhouse:pulselabs" in result.stdout
+    assert "Sources:    company_search" in result.stdout
+    assert 'Review:     python -m jobtracker discover companies review --company "Pulse Labs"' in result.stdout
 
 
 def test_discovery_cli_review_command_shows_next_action_and_candidates(sqlite_database_url: str) -> None:

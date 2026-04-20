@@ -140,6 +140,28 @@ def _best_resolution_text(payload: dict) -> str:
     return "-"
 
 
+def _score_bar(score: int | None, *, width: int = 10) -> str:
+    value = max(0, min(100, int(score or 0)))
+    filled = round((value / 100) * width)
+    return "[" + ("#" * filled) + ("-" * (width - filled)) + f"] {value:>3}"
+
+
+def _action_label(action: str) -> str:
+    labels = {
+        "promote": "Promote",
+        "resolve": "Resolve",
+        "review_resolution": "Review resolution",
+        "review_jobs": "Review jobs",
+        "watch": "Watch",
+        "ignored": "Ignored",
+    }
+    return labels.get(action, action.replace("_", " ").title())
+
+
+def _review_command(display_name: str) -> str:
+    return f'python -m jobtracker discover companies review --company "{display_name}"'
+
+
 @app.command("run")
 def run_collection(
     config_dir: Path = typer.Option(
@@ -272,36 +294,38 @@ def discovery_inbox(
         service = ReportingService(session)
         discoveries = service.list_discovered_companies(filters)
         summary = service.summarize_discovery_inbox()
+    typer.echo("Discovery Inbox")
+    typer.echo("=" * 15)
     typer.echo(
-        "Discovery inbox: "
-        f"candidate={summary['candidate']} | "
-        f"watch={summary['watch']} | "
-        f"tracked={summary['tracked']} | "
-        f"ready_to_promote={summary['ready_to_promote']} | "
-        f"needs_resolution={summary['needs_resolution']}"
+        "Summary: "
+        f"{summary['candidate']} candidates, "
+        f"{summary['ready_to_promote']} ready to promote, "
+        f"{summary['needs_resolution']} need resolution, "
+        f"{summary['tracked']} tracked"
     )
+    if new_only:
+        typer.echo("Filter: new companies only")
+    typer.echo("")
     if not discoveries:
         typer.echo("No candidate discoveries found.")
         return
-    for discovery in discoveries:
+    for index, discovery in enumerate(discoveries, start=1):
         payload = _discovery_payload(discovery)
         source_text = _source_text(payload)
         best_text = _best_resolution_text(payload)
         next_action = describe_discovery_action(discovery)
+        typer.echo(f"{index}. {discovery.display_name}")
+        typer.echo(f"   Next:       {_action_label(next_action)}")
         typer.echo(
-            " | ".join(
-                [
-                    discovery.display_name,
-                    f"resolution={discovery.resolution_status}",
-                    f"discovery={discovery.discovery_score or 0}",
-                    f"fit={discovery.fit_score or 0}",
-                    f"hiring={discovery.hiring_score or 0}",
-                    f"sources={source_text or '-'}",
-                    f"best={best_text}",
-                    f"next={next_action}",
-                ]
-            )
+            "   Scores:     "
+            f"discovery {_score_bar(discovery.discovery_score)}  "
+            f"fit {_score_bar(discovery.fit_score)}  "
+            f"hiring {_score_bar(discovery.hiring_score)}"
         )
+        typer.echo(f"   Resolution: {discovery.resolution_status} | best {best_text}")
+        typer.echo(f"   Sources:    {source_text or '-'}")
+        typer.echo(f"   Review:     {_review_command(discovery.display_name)}")
+        typer.echo("")
 
 
 @discover_companies_app.command("top")

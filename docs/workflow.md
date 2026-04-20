@@ -62,8 +62,8 @@ This should be the default review entry point.
 What to look for:
 
 - companies with strong `discovery_score`
-- discoveries that already have `next=promote`
-- discoveries that still need `next=resolve`
+- discoveries that show `Next: Promote`
+- discoveries that show `Next: Resolve`
 - repeated appearances across discovery sources
 - promising unresolved companies that may benefit from fingerprinting
 - obvious ignores you can clear out quickly
