@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field, HttpUrl, field_validator, model_validator
 WorkplaceType = Literal["remote", "hybrid", "onsite", "unknown"]
 JobStatus = Literal["active", "stale", "closed", "unknown"]
 SourceType = Literal["ats", "aggregator", "company_page", "enrichment", "other"]
-DiscoverySourceType = Literal["search", "ecosystem", "directory", "aggregator", "ats_pattern", "other"]
+DiscoverySourceType = Literal["search", "aggregator", "ats_pattern", "other"]
 DiscoveryStatus = Literal["candidate", "watch", "tracked", "ignored", "archived"]
 ResolutionStatus = Literal["unresolved", "partial", "resolved", "conflicted"]
 

@@ -1,6 +1,6 @@
 # Discovery Sources
 
-Company discovery is the entry point for JobTracker. The default config combines live sources with local curated source files so discovery can find companies before you manually add ATS boards.
+Company discovery is the entry point for JobTracker. The default config uses live automated sources so discovery results are tied to current hiring signals rather than hand-maintained company lists.
 
 ## Default Sources
 
@@ -37,7 +37,7 @@ Recommended URL:
 feed_url: "https://remoteok.com/api"
 ```
 
-This source fetches all remote jobs and filters them locally against your discovery keywords.
+This source fetches remote jobs and filters them locally against your discovery keywords.
 
 ### `hn_whos_hiring`
 
@@ -61,49 +61,15 @@ params:
 
 Use `story_id` only when you want to force a specific monthly thread.
 
-### `austin_ecosystem`
-
-Purpose:
-
-- local curated Austin company discovery
-- useful for companies that may not appear in live job feeds every day
-
-Recommended URL:
-
-```yaml
-entries_urls:
-  - file:///F:/Projects/JobTracker/config/data/austin_ecosystem.json
-```
-
-Update this JSON file as you learn about Austin companies. Prefer specific ATS URLs in `careers_url` when known.
-
-### `company_directory`
-
-Purpose:
-
-- local curated remote/hybrid-friendly company discovery
-- useful for broader company awareness beyond Austin
-
-Recommended URL:
-
-```yaml
-entries_urls:
-  - file:///F:/Projects/JobTracker/config/data/company_directory.json
-```
-
-Update this JSON file over time as a durable company universe.
-
 ## Recommended Starting Setup
 
 For day 1:
 
 - keep `remote_ok` enabled
 - keep `hn_whos_hiring` enabled
-- keep `austin_ecosystem` enabled
-- keep `company_directory` enabled
 - enable `company_search` only if `SERPAPI_KEY` is configured
 
-This gives you useful discovery without needing to manually search for companies first.
+This keeps discovery automated while avoiding manual seed lists.
 
 ## After Discovery
 

@@ -4,7 +4,7 @@
 
 Use JobTracker as a recurring, company-first workflow for:
 
-- discovering promising companies from live and curated sources
+- discovering promising companies from live sources
 - deciding which companies deserve active monitoring
 - resolving companies to ATS or careers surfaces
 - collecting jobs from tracked companies
@@ -39,7 +39,7 @@ The daily workflow should be short, roughly 5-15 minutes.
 python -m jobtracker discover companies run
 ```
 
-Discovery can pull from RemoteOK, HN Who's Hiring, SerpAPI Google Jobs, and local curated company files depending on what is enabled in [config/company_discovery.yaml](/abs/path/F:/Projects/JobTracker/config/company_discovery.yaml).
+Discovery can pull from RemoteOK, HN Who's Hiring, and SerpAPI Google Jobs depending on what is enabled in [config/company_discovery.yaml](/abs/path/F:/Projects/JobTracker/config/company_discovery.yaml).
 
 ### 2. Improve unresolved companies when needed
 
@@ -251,7 +251,6 @@ python -m jobtracker export markdown --output reports/weekly-jobs.md --limit 25
 At the end of the weekly review, update config based on what you learned:
 
 - disable sources that are too noisy
-- add or improve curated entries in [config/data/austin_ecosystem.json](/abs/path/F:/Projects/JobTracker/config/data/austin_ecosystem.json) and [config/data/company_directory.json](/abs/path/F:/Projects/JobTracker/config/data/company_directory.json)
 - set `SERPAPI_KEY` if Google Jobs search would improve discovery
 - use discovery promotion for ATS-backed companies you want monitored without manually editing source lists first
 - add or remove source identifiers in [config/sources.yaml](/abs/path/F:/Projects/JobTracker/config/sources.yaml) when you want broader direct tracked coverage

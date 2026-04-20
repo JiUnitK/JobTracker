@@ -9,9 +9,7 @@ from jobtracker.company_discovery.common import (
     text_matches_query,
     workplace_matches_query,
 )
-from jobtracker.company_discovery.ecosystem_adapter import AustinEcosystemDiscoveryAdapter
 from jobtracker.company_discovery.base import CompanyDiscoveryAdapter
-from jobtracker.company_discovery.directory_adapter import CompanyDirectoryDiscoveryAdapter
 from jobtracker.company_discovery.normalize import (
     normalize_company_discovery,
     normalize_company_name,
@@ -34,8 +32,6 @@ from jobtracker.company_discovery.scoring import (
 )
 
 __all__ = [
-    "AustinEcosystemDiscoveryAdapter",
-    "CompanyDirectoryDiscoveryAdapter",
     "CompanyDiscoveryAdapter",
     "CompanyDiscoveryRegistry",
     "CompanyDiscoveryScoreResult",

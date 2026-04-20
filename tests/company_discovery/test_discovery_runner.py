@@ -7,9 +7,8 @@ from pathlib import Path
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
-from jobtracker.company_discovery.directory_adapter import CompanyDirectoryDiscoveryAdapter
-from jobtracker.company_discovery.ecosystem_adapter import AustinEcosystemDiscoveryAdapter
 from jobtracker.company_discovery.registry import CompanyDiscoveryRegistry, build_default_company_discovery_registry
+from jobtracker.company_discovery.remoteok_adapter import RemoteOKDiscoveryAdapter
 from jobtracker.company_discovery.runner import CompanyDiscoveryRunner
 from jobtracker.company_discovery.search_adapter import CompanySearchDiscoveryAdapter
 from jobtracker.config.loader import load_app_config
@@ -33,15 +32,20 @@ def test_company_discovery_runner_persists_discovery_records(sqlite_database_url
     app_config = load_app_config(Path("config"))
     _disable_all_sources(app_config)
     app_config.company_discovery.sources[0].enabled = True
-    app_config.company_discovery.sources[3].enabled = True
+    app_config.company_discovery.sources[1].enabled = True
     app_config.company_discovery.sources[0].params["results"] = json.loads(
         Path("tests/fixtures/company_search_results.json").read_text(encoding="utf-8")
     )
-    app_config.company_discovery.sources[3].params["entries"] = json.loads(
-        Path("tests/fixtures/austin_ecosystem_entries.json").read_text(encoding="utf-8")
-    )
+    app_config.company_discovery.sources[1].params["feed_url"] = "https://example.com/remoteok.json"
 
-    runner = CompanyDiscoveryRunner(registry=build_default_company_discovery_registry())
+    remoteok_payload = json.loads(
+        Path("tests/fixtures/remoteok_feed.json").read_text(encoding="utf-8")
+    )
+    registry = CompanyDiscoveryRegistry()
+    registry.register(CompanySearchDiscoveryAdapter())
+    registry.register(RemoteOKDiscoveryAdapter(fetch_json=lambda url: remoteok_payload))
+
+    runner = CompanyDiscoveryRunner(registry=registry)
 
     summary = runner.run(
         app_config,
@@ -77,20 +81,20 @@ def test_company_discovery_runner_supports_fetched_source_material(sqlite_databa
     app_config = load_app_config(Path("config"))
     _disable_all_sources(app_config)
     app_config.company_discovery.sources[0].enabled = True
-    app_config.company_discovery.sources[3].enabled = True
+    app_config.company_discovery.sources[1].enabled = True
     app_config.company_discovery.sources[0].params = {
         "results_urls": ["https://example.com/company-search.json"]
     }
-    app_config.company_discovery.sources[3].params = {
-        "entries_urls": ["https://example.com/austin-ecosystem.json"]
+    app_config.company_discovery.sources[1].params = {
+        "feed_url": "https://example.com/remoteok.json"
     }
 
     payload_map = {
         "https://example.com/company-search.json": json.loads(
             Path("tests/fixtures/company_search_results.json").read_text(encoding="utf-8")
         ),
-        "https://example.com/austin-ecosystem.json": json.loads(
-            Path("tests/fixtures/austin_ecosystem_entries.json").read_text(encoding="utf-8")
+        "https://example.com/remoteok.json": json.loads(
+            Path("tests/fixtures/remoteok_feed.json").read_text(encoding="utf-8")
         ),
     }
     registry = CompanyDiscoveryRegistry()
@@ -98,7 +102,7 @@ def test_company_discovery_runner_supports_fetched_source_material(sqlite_databa
         CompanySearchDiscoveryAdapter(fetch_json=lambda url: payload_map[url])
     )
     registry.register(
-        AustinEcosystemDiscoveryAdapter(fetch_json=lambda url: payload_map[url])
+        RemoteOKDiscoveryAdapter(fetch_json=lambda url: payload_map[url])
     )
 
     summary = CompanyDiscoveryRunner(registry=registry).run(
@@ -169,23 +173,24 @@ def test_company_discovery_runner_supports_query_driven_search_sources(sqlite_da
     ]
 
 
-def test_company_discovery_runner_merges_cross_source_directory_evidence(sqlite_database_url: str) -> None:
+def test_company_discovery_runner_merges_cross_source_automated_evidence(sqlite_database_url: str) -> None:
     app_config = load_app_config(Path("config"))
     _disable_all_sources(app_config)
     app_config.company_discovery.sources[0].enabled = True
-    app_config.company_discovery.sources[3].enabled = True
-    app_config.company_discovery.sources[4].enabled = True
+    app_config.company_discovery.sources[1].enabled = True
     app_config.company_discovery.sources[0].params["results"] = json.loads(
         Path("tests/fixtures/company_search_results.json").read_text(encoding="utf-8")
     )
-    app_config.company_discovery.sources[3].params["entries"] = json.loads(
-        Path("tests/fixtures/austin_ecosystem_entries.json").read_text(encoding="utf-8")
-    )
-    app_config.company_discovery.sources[4].params["entries"] = json.loads(
-        Path("tests/fixtures/company_directory_entries.json").read_text(encoding="utf-8")
-    )
+    app_config.company_discovery.sources[1].params["feed_url"] = "https://example.com/remoteok.json"
 
-    runner = CompanyDiscoveryRunner(registry=build_default_company_discovery_registry())
+    remoteok_payload = json.loads(
+        Path("tests/fixtures/remoteok_feed.json").read_text(encoding="utf-8")
+    )
+    registry = CompanyDiscoveryRegistry()
+    registry.register(CompanySearchDiscoveryAdapter())
+    registry.register(RemoteOKDiscoveryAdapter(fetch_json=lambda url: remoteok_payload))
+
+    runner = CompanyDiscoveryRunner(registry=registry)
     summary = runner.run(
         app_config,
         sqlite_database_url,
@@ -200,13 +205,12 @@ def test_company_discovery_runner_merges_cross_source_directory_evidence(sqlite_
         )
 
     assert summary.status == "success"
-    assert summary.total_raw_discoveries == 5
-    assert len(discoveries) == 3
+    assert summary.total_raw_discoveries == 3
+    assert len(discoveries) == 2
     assert pulse is not None
     assert pulse.score_payload["source_names"] == [
-        "austin_ecosystem",
-        "company_directory",
         "company_search",
+        "remote_ok",
     ]
     assert pulse.score_payload["best_resolution"]["platform"] == "greenhouse"
 

@@ -57,25 +57,3 @@ sources:
     type: aggregator
     enabled: true
     params: {}
-
-  # Austin-based and Austin-presence tech companies. Update careers_url to ATS board
-  # URLs (boards.greenhouse.io/..., jobs.lever.co/...) as you verify each company.
-  - name: austin_ecosystem
-    type: ecosystem
-    enabled: true
-    params:
-      entries: []
-      entries_urls:
-        - file:///F:/Projects/JobTracker/config/data/austin_ecosystem.json
-      entries_payload_key: entries
-
-  # Broader curated list of remote/hybrid-friendly tech companies. Same note on
-  # careers_url: swap general /careers pages for specific ATS board URLs where known.
-  - name: company_directory
-    type: directory
-    enabled: true
-    params:
-      entries: []
-      entries_urls:
-        - file:///F:/Projects/JobTracker/config/data/company_directory.json
-      entries_payload_key: entries

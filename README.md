@@ -14,11 +14,10 @@ The intended user journey is:
 
 JobTracker currently supports:
 
-- autonomous company discovery from live and curated sources
+- autonomous company discovery from live sources
 - RemoteOK discovery with no API key
 - Hacker News "Who is hiring?" discovery with no API key
 - SerpAPI Google Jobs discovery when `SERPAPI_KEY` is configured
-- local Austin ecosystem and broader company-directory discovery files
 - ATS fingerprinting for unresolved companies across Greenhouse, Lever, and Ashby
 - company scoring and resolution status tracking
 - ranked ATS and careers-surface resolution targets
@@ -38,7 +37,6 @@ Today:
 - JobTracker can discover companies from enabled discovery sources
 - RemoteOK and HN discovery can work without external accounts
 - SerpAPI search discovery works when `SERPAPI_KEY` is available in `.env`
-- curated JSON files provide starter Austin and remote-friendly company coverage
 - discovery review shows the best current ATS or careers target for each company candidate
 - unresolved companies can be fingerprinted against Greenhouse, Lever, and Ashby
 - promoted companies flow into tracked job monitoring automatically
@@ -46,7 +44,7 @@ Today:
 
 Current limitation:
 
-- discovery quality depends on enabled source quality, API availability, and how well the local curated data files match your target market
+- discovery quality depends on enabled source quality, API availability, and how well configured queries match your target market
 
 The next work is tracked in [docs/v1-roadmap.md](/abs/path/F:/Projects/JobTracker/docs/v1-roadmap.md).
 
@@ -62,7 +60,7 @@ python -m pip install -e .[dev]
 
 ### 2. Optional: configure SerpAPI
 
-RemoteOK, HN Who's Hiring, and the local curated JSON feeds do not require an API key.
+RemoteOK and HN Who's Hiring do not require an API key.
 
 If you want Google Jobs search discovery too, create a repo-root `.env` file:
 
@@ -92,8 +90,6 @@ The default discovery config can pull from:
 
 - `remote_ok`: RemoteOK public API
 - `hn_whos_hiring`: HN Algolia API for the monthly Who's Hiring thread
-- `austin_ecosystem`: local Austin company JSON file
-- `company_directory`: local broader company JSON file
 - `company_search`: SerpAPI Google Jobs, when `SERPAPI_KEY` is set
 
 ### 5. Improve unresolved companies with ATS fingerprinting
@@ -207,8 +203,6 @@ Discovery sources in [config/company_discovery.yaml](/abs/path/F:/Projects/JobTr
 - `company_search`: SerpAPI Google Jobs through `query_url_template`, using `SERPAPI_KEY`
 - `remote_ok`: RemoteOK public API at `https://remoteok.com/api`
 - `hn_whos_hiring`: HN Algolia API, auto-detecting the current monthly thread
-- `austin_ecosystem`: local curated Austin company file
-- `company_directory`: local curated broader company file
 
 Profile tuning lives in [config/profile.yaml](/abs/path/F:/Projects/JobTracker/config/profile.yaml).
 

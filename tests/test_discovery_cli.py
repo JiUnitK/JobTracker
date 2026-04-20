@@ -82,10 +82,10 @@ def _seed_discovery_data(sqlite_database_url: str) -> None:
 
         lakeside = discovery_repo.upsert(
             NormalizedCompanyDiscovery(
-                source_name="austin_ecosystem",
+                source_name="remote_ok",
                 normalized_name="lakeside-robotics",
                 display_name="Lakeside Robotics",
-                source_url="https://austin.example.com/lakeside",
+                source_url="https://remoteok.com/remote-jobs/lakeside",
                 careers_url="https://lakeside.dev/careers",
                 job_title="Software Engineer",
                 location_text="Remote",
@@ -97,9 +97,9 @@ def _seed_discovery_data(sqlite_database_url: str) -> None:
             company_discovery_id=lakeside.id,
             search_run_id=run.id,
             raw_discovery=RawCompanyDiscovery(
-                source_name="austin_ecosystem",
-                source_type="ecosystem",
-                source_url="https://austin.example.com/lakeside",
+                source_name="remote_ok",
+                source_type="aggregator",
+                source_url="https://remoteok.com/remote-jobs/lakeside",
                 company_name="Lakeside Robotics",
                 careers_url="https://lakeside.dev/careers",
                 job_title="Software Engineer",

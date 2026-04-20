@@ -37,7 +37,7 @@ With company discovery in place, JobTracker should help answer four questions:
 
 Included in this design:
 
-- company discovery from search and ecosystem sources
+- company discovery from search, aggregator, and ATS-pattern sources
 - company resolution into known ATS or careers endpoints
 - company-level ranking and watch states
 - promotion workflow from discovered company to tracked company
@@ -134,25 +134,6 @@ What we extract:
 - repeated appearance of relevant roles
 - likely Austin or remote hiring footprint
 - downstream clue for careers-page resolution
-
-### Ecosystem discovery
-
-Use company lists that are useful for "who should I watch?" even when they are not job boards.
-
-Examples:
-
-- Austin startup directories
-- VC portfolio pages
-- "top startups in Austin" lists
-- local tech community lists
-
-What we extract:
-
-- company name
-- company site
-- location or Austin affiliation
-- sector/domain tags
-- evidence source
 
 ### Direct ATS-pattern discovery
 
@@ -363,7 +344,7 @@ Suggested outputs:
 - remote-friendliness
 - role-family relevance across evidence
 - repeated appearance in preferred searches
-- target-company preference if manually seeded
+- repeated appearance in automated discovery sources
 
 ### Company hiring signals
 
@@ -448,7 +429,7 @@ Possible sections:
 - enabled adapters
 - discovery search terms
 - location and workplace filters
-- ecosystem sources
+- source-specific fetch and parsing behavior
 - resolution behavior
 - discovery scoring weights
 - promotion defaults
@@ -525,7 +506,7 @@ The safest rollout is incremental:
 ### Phase 2: First discovery sources
 
 - one search-driven discovery adapter
-- one ecosystem or ATS-pattern discovery adapter
+- one aggregator or ATS-pattern discovery adapter
 - fixture and integration coverage
 
 ### Phase 3: Resolution and scoring
@@ -543,10 +524,9 @@ The safest rollout is incremental:
 ## Open Questions
 
 1. Should discovery live in the same `search_runs` table, or should it get a separate `discovery_runs` concept?
-2. Which discovery source should come first: search-driven, ecosystem-list, or ATS-pattern?
+2. Which discovery source should come first: search-driven, aggregator-driven, or ATS-pattern?
 3. Should promotion update `sources.yaml`, or should tracked sources move into the database?
 4. How much aggregator support do we want before we validate the workflow manually?
-5. Do we want company-level notes and manual tags in the first discovery pass?
 
 ## Recommendation Summary
 

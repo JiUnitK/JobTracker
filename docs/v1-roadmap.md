@@ -19,7 +19,7 @@ JobTracker already has:
 
 - a local-first Python CLI application
 - persistent storage, migrations, and test coverage
-- autonomous discovery from RemoteOK, HN Who's Hiring, SerpAPI Google Jobs, local Austin ecosystem data, and local company-directory data
+- autonomous discovery from RemoteOK, HN Who's Hiring, and SerpAPI Google Jobs
 - ATS fingerprinting for unresolved companies across Greenhouse, Lever, and Ashby
 - company scoring and ATS/careers resolution with ranked candidates
 - company review, promotion, ignore, and job drill-down flows
@@ -58,7 +58,7 @@ The biggest remaining gaps are operational quality and signal quality:
 - live fetches need stronger timeout and retry behavior
 - discovery output needs iteration after real usage
 - keyword matching is still relatively simple
-- local curated source data will need ongoing tuning
+- discovery source tuning needs real usage feedback
 
 ## Next Tracks
 
@@ -87,7 +87,7 @@ Focus:
 - add exclude terms for common false positives
 - improve HN comment parsing edge cases
 - improve SerpAPI field mapping as real payloads are observed
-- tune curated Austin and broader company-directory data
+- tune live-source field mapping and query construction as real payloads are observed
 
 ### Workflow Refinement
 
