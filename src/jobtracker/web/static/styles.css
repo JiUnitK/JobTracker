@@ -49,7 +49,7 @@ body {
 
 .search-form {
   display: grid;
-  grid-template-columns: minmax(180px, 1.6fr) minmax(160px, 1.2fr) 88px 88px 136px 104px;
+  grid-template-columns: minmax(180px, 1.6fr) minmax(160px, 1.2fr) 88px 88px 136px 104px 104px;
   gap: 10px;
   align-items: end;
 }
@@ -158,6 +158,11 @@ button:disabled {
   font-size: 20px;
 }
 
+.summary small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .status {
   min-height: 22px;
   margin: 0 0 12px;
@@ -233,6 +238,22 @@ td.score {
 }
 
 .open-link:hover {
+  text-decoration: underline;
+}
+
+.url-preview {
+  display: block;
+  max-width: 320px;
+  margin-top: 6px;
+  overflow: hidden;
+  color: var(--accent-strong);
+  font-size: 12px;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.url-preview:hover {
   text-decoration: underline;
 }
 

@@ -90,6 +90,7 @@ Instant job search is the fastest front door when you want current postings with
 python -m jobtracker search jobs
 python -m jobtracker search jobs --days 7 --query "customer success" --location Remote --limit 25
 python -m jobtracker search jobs --include-unknown-age
+python -m jobtracker search jobs --include-low-fit
 python -m jobtracker search jobs --json
 python -m jobtracker search jobs --markdown-output reports/instant-jobs.md
 python -m jobtracker web
@@ -243,7 +244,7 @@ Instant search planning supports:
 
 Freshness filtering is intentionally conservative. Results with explicit posting dates or relative age text are classified with `high`, `medium`, or `low` confidence. Results with no usable age signal are excluded by default and can be included with `--include-unknown-age`.
 
-Instant search scoring ranks title, keyword, skill, location, workplace, seniority, freshness, source, and job-page signals. The CLI shows concise `Why:` reasons, and `--markdown-output` writes the same structured result set as a review table.
+Instant search scoring ranks title, keyword, skill, location, workplace, seniority, freshness, source, and job-page signals. By default, low-fit results are skipped and counted under `Skipped fit`; use `--include-low-fit` or the GUI `Low fit` toggle to include them. The CLI shows concise `Why:` reasons, and `--markdown-output` writes the same structured result set as a review table.
 
 Profile tuning lives in [config/profile.yaml](/abs/path/F:/Projects/JobTracker/config/profile.yaml).
 

@@ -4,11 +4,13 @@ const locationInput = document.querySelector("#locationInput");
 const daysInput = document.querySelector("#daysInput");
 const limitInput = document.querySelector("#limitInput");
 const unknownInput = document.querySelector("#unknownInput");
+const lowFitInput = document.querySelector("#lowFitInput");
 const sourceStatus = document.querySelector("#sourceStatus");
 const resultCount = document.querySelector("#resultCount");
 const maxAge = document.querySelector("#maxAge");
 const skippedAge = document.querySelector("#skippedAge");
 const skippedFit = document.querySelector("#skippedFit");
+const fitMode = document.querySelector("#fitMode");
 const statusMessage = document.querySelector("#statusMessage");
 const resultsBody = document.querySelector("#resultsBody");
 const searchButton = document.querySelector("#searchButton");
@@ -42,6 +44,7 @@ function renderSummary(summary) {
   maxAge.textContent = `${summary.max_age_days}d`;
   skippedAge.textContent = String(summary.skipped_for_age);
   skippedFit.textContent = String(summary.skipped_for_relevance);
+  fitMode.textContent = summary.include_low_fit ? "disabled" : "strict";
   markdownButton.disabled = summary.results.length === 0;
 }
 
@@ -55,19 +58,23 @@ function renderResults(summary) {
   }
 
   summary.results.forEach((result, index) => {
+    const url = String(result.url || "");
     const reasons = (result.reasons || [])
       .map((reason) => `<span class="reason">${escapeHtml(reason)}</span>`)
       .join("");
     const row = document.createElement("tr");
     row.innerHTML = `
       <td>${index + 1}</td>
-      <td><strong>${escapeHtml(result.title)}</strong></td>
+      <td>
+        <strong>${escapeHtml(result.title)}</strong>
+        <a class="url-preview" href="${escapeHtml(url)}" target="_blank" rel="noreferrer">${escapeHtml(url)}</a>
+      </td>
       <td>${escapeHtml(result.company || "Unknown company")}</td>
       <td>${escapeHtml(result.location || result.workplace_type || "-")}</td>
       <td>${escapeHtml(ageText(result))}<br><span class="muted">${escapeHtml(result.age_confidence)}</span></td>
       <td class="score">${escapeHtml(result.score)}</td>
       <td><div class="reasons">${reasons || '<span class="muted">-</span>'}</div></td>
-      <td><a class="open-link" href="${escapeHtml(result.url)}" target="_blank" rel="noreferrer">Open</a></td>
+      <td><a class="open-link" href="${escapeHtml(url)}" target="_blank" rel="noreferrer">Open role</a></td>
     `;
     resultsBody.appendChild(row);
   });
@@ -80,6 +87,7 @@ function requestBody() {
     days: daysInput.value ? Number(daysInput.value) : null,
     limit: limitInput.value ? Number(limitInput.value) : 25,
     include_unknown_age: unknownInput.checked,
+    include_low_fit: lowFitInput.checked,
   };
 }
 
@@ -92,6 +100,7 @@ async function loadConfig() {
   daysInput.value = config.max_age_days;
   limitInput.value = config.default_limit || 25;
   unknownInput.checked = Boolean(config.include_unknown_age);
+  lowFitInput.checked = Boolean(config.include_low_fit);
   sourceStatus.textContent = (config.enabled_instant_search_sources || []).join(", ") || "No enabled sources";
 }
 
@@ -149,4 +158,3 @@ form.addEventListener("submit", runSearch);
 markdownButton.addEventListener("click", copyMarkdown);
 
 loadConfig().catch((error) => setStatus(error.message, true));
-

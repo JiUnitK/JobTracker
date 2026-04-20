@@ -50,6 +50,7 @@ def create_app(
                     location=payload.location,
                     max_age_days=payload.days,
                     include_unknown_age=payload.include_unknown_age,
+                    include_low_fit=payload.include_low_fit,
                     limit=payload.limit,
                 ),
             )
@@ -74,6 +75,7 @@ def build_web_config_summary(app_config: AppConfig) -> WebConfigSummary:
         ),
         max_age_days=search_settings.max_age_days,
         include_unknown_age=search_settings.include_unknown_age,
+        include_low_fit=False,
         enabled_instant_search_sources=[
             source.name for source in app_config.job_search.enabled_sources()
         ],
@@ -87,4 +89,3 @@ def _first_value(*groups: list[str]) -> str | None:
             if cleaned:
                 return cleaned
     return None
-

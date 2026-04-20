@@ -23,6 +23,7 @@ class FakeRunner:
             requested_queries=[InstantJobSearchQuery(query="customer success", location="Remote")],
             max_age_days=overrides.max_age_days or 7,
             include_unknown_age=bool(overrides.include_unknown_age),
+            include_low_fit=bool(overrides.include_low_fit),
             results=[
                 InstantJobSearchResult(
                     title="Customer Success Specialist",
@@ -61,6 +62,15 @@ def test_search_jobs_command_outputs_json(monkeypatch) -> None:
     assert result.exit_code == 0
     assert '"results"' in result.stdout
     assert '"Customer Success Specialist"' in result.stdout
+
+
+def test_search_jobs_command_passes_include_low_fit(monkeypatch) -> None:
+    monkeypatch.setattr(cli_job_search, "InstantJobSearchRunner", lambda: FakeRunner())
+
+    result = runner.invoke(app, ["search", "jobs", "--include-low-fit", "--json"])
+
+    assert result.exit_code == 0
+    assert '"include_low_fit": true' in result.stdout
 
 
 def test_search_jobs_command_writes_markdown(monkeypatch) -> None:

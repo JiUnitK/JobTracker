@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 from jobtracker.config.models import AppConfig
 from jobtracker.job_search.models import InstantJobSearchRequest, InstantJobSearchResult
@@ -32,6 +32,10 @@ def score_instant_job_result(
     if excluded:
         result.score = 0
         result.reasons = [f"excluded keyword: {excluded[0]}"]
+        return ScoredInstantResult(result=result, relevant=False)
+    if _is_aggregator_collection_result(result, searchable):
+        result.score = 0
+        result.reasons = ["job-board search result, not a role posting"]
         return ScoredInstantResult(result=result, relevant=False)
 
     score = 10
@@ -144,14 +148,18 @@ def _source_score(url: str) -> tuple[int, str | None]:
         return 10, "ATS source"
     if "workdayjobs.com" in lowered or "myworkdayjobs.com" in lowered:
         return 8, "ATS source"
-    if any(host in lowered for host in ["linkedin.com/jobs", "indeed.com", "ziprecruiter.com"]):
+    if _is_actual_job_board_posting(url):
         return 4, "job board source"
     return 0, None
 
 
 def _looks_like_job_posting(url: str, searchable: str) -> bool:
+    if _is_aggregator_collection_url(url):
+        return False
     parsed = urlparse(url)
     path = parsed.path.lower()
+    if _is_actual_job_board_posting(url):
+        return True
     if any(piece in path for piece in ["/job", "/jobs", "/careers", "/positions", "/posting"]):
         return True
     return any(
@@ -162,6 +170,76 @@ def _looks_like_job_posting(url: str, searchable: str) -> bool:
 
 def _matches_location(searchable: str, locations: list[str]) -> bool:
     return any(location.lower() in searchable for location in locations if location.strip())
+
+
+def _is_aggregator_collection_result(
+    result: InstantJobSearchResult,
+    searchable: str,
+) -> bool:
+    if _is_aggregator_collection_url(str(result.url)):
+        return True
+    title = result.title.lower()
+    company = (result.company or "").lower()
+    if company in {"indeed", "linkedin", "ziprecruiter"} and _looks_like_collection_title(title):
+        return True
+    return _looks_like_collection_title(title) and any(
+        host in str(result.url).lower()
+        for host in ["indeed.com", "linkedin.com", "ziprecruiter.com", "glassdoor.com"]
+    )
+
+
+def _is_aggregator_collection_url(url: str) -> bool:
+    parsed = urlparse(url)
+    host = parsed.netloc.lower().removeprefix("www.")
+    path = parsed.path.lower().rstrip("/")
+    query = parse_qs(parsed.query)
+    if "indeed.com" in host:
+        if path in {"", "/", "/jobs"}:
+            return True
+        if path.startswith("/q-") or path.startswith("/m/jobs"):
+            return True
+        return any(key in query for key in ["q", "l"])
+    if "linkedin.com" in host:
+        if path == "/jobs" or path.startswith("/jobs/search"):
+            return True
+        if path.startswith("/jobs/") and not path.startswith("/jobs/view/"):
+            return True
+    if "ziprecruiter.com" in host:
+        return path.startswith("/jobs-search") or path.startswith("/jobs")
+    if "glassdoor.com" in host:
+        return "/job-listing" not in path and ("jobs" in path or "job-search" in path)
+    return False
+
+
+def _is_actual_job_board_posting(url: str) -> bool:
+    parsed = urlparse(url)
+    host = parsed.netloc.lower().removeprefix("www.")
+    path = parsed.path.lower()
+    query = parse_qs(parsed.query)
+    if "linkedin.com" in host:
+        return path.startswith("/jobs/view/")
+    if "indeed.com" in host:
+        return path.startswith("/viewjob") or path.startswith("/rc/clk") or "jk" in query
+    if "ziprecruiter.com" in host:
+        return path.startswith("/jobs/") and not path.startswith("/jobs-search")
+    if "glassdoor.com" in host:
+        return "/job-listing/" in path
+    return False
+
+
+def _looks_like_collection_title(title: str) -> bool:
+    collection_phrases = [
+        "jobs in",
+        "remote jobs",
+        "software engineer jobs",
+        "engineering jobs",
+        "apply today",
+        "work from home",
+        "hiring now",
+        "job search",
+        "available jobs",
+    ]
+    return any(phrase in title for phrase in collection_phrases)
 
 
 def _tokens(text: str) -> list[str]:

@@ -39,6 +39,11 @@ def search_jobs(
         "--include-unknown-age",
         help="Include results whose posting age cannot be verified.",
     ),
+    include_low_fit: bool = typer.Option(
+        False,
+        "--include-low-fit",
+        help="Include results that would otherwise be skipped for low fit.",
+    ),
     json_output: bool = typer.Option(False, "--json", help="Output structured JSON."),
     markdown_output: Path | None = typer.Option(
         None,
@@ -59,6 +64,7 @@ def search_jobs(
                 location=location or None,
                 max_age_days=days,
                 include_unknown_age=True if include_unknown_age else None,
+                include_low_fit=include_low_fit,
                 limit=limit,
             ),
         )

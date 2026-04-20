@@ -64,6 +64,25 @@ class UnknownAgeAdapter(InstantJobSearchAdapter):
         ]
 
 
+class LowFitAdapter(InstantJobSearchAdapter):
+    source_name = "brave_search"
+
+    def search(
+        self,
+        source: InstantSearchSourceDefinition,
+        query: InstantJobSearchQuery,
+    ) -> list[RawInstantSearchResult]:
+        return [
+            RawInstantSearchResult(
+                source_id="low-fit",
+                title="Community Events Coordinator - Example Health",
+                url="https://example.com/events/community-coordinator",
+                snippet="Austin, TX role posted 1 day ago",
+                age_text="1 day ago",
+            )
+        ]
+
+
 def test_runner_returns_ranked_structured_results_without_database_writes() -> None:
     app_config = load_app_config(Path("config"))
     registry = InstantJobSearchRegistry()
@@ -119,6 +138,43 @@ def test_runner_includes_unknown_age_when_requested() -> None:
     assert summary.skipped_for_age == 0
     assert len(summary.results) == 1
     assert summary.results[0].age_confidence == "unknown"
+
+
+def test_runner_excludes_low_fit_by_default() -> None:
+    app_config = load_app_config(Path("config"))
+    registry = InstantJobSearchRegistry()
+    registry.register(LowFitAdapter())
+
+    summary = InstantJobSearchRunner(registry).run(
+        app_config,
+        JobSearchOverrides(query="backend engineer", location="Remote", max_age_days=7),
+        now=datetime(2026, 4, 20, tzinfo=timezone.utc),
+    )
+
+    assert summary.skipped_for_relevance >= 1
+    assert summary.results == []
+
+
+def test_runner_includes_low_fit_when_requested() -> None:
+    app_config = load_app_config(Path("config"))
+    registry = InstantJobSearchRegistry()
+    registry.register(LowFitAdapter())
+
+    summary = InstantJobSearchRunner(registry).run(
+        app_config,
+        JobSearchOverrides(
+            query="backend engineer",
+            location="Remote",
+            max_age_days=7,
+            include_low_fit=True,
+        ),
+        now=datetime(2026, 4, 20, tzinfo=timezone.utc),
+    )
+
+    assert summary.include_low_fit is True
+    assert summary.skipped_for_relevance == 0
+    assert len(summary.results) == 1
+    assert summary.results[0].title == "Community Events Coordinator"
 
 
 def test_human_summary_includes_freshness_and_reasons() -> None:

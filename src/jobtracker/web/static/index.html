@@ -34,6 +34,10 @@
             <input id="unknownInput" name="include_unknown_age" type="checkbox">
             <span>Unknown age</span>
           </label>
+          <label class="toggle">
+            <input id="lowFitInput" name="include_low_fit" type="checkbox">
+            <span>Low fit</span>
+          </label>
           <button id="searchButton" type="submit">Search</button>
         </form>
       </section>
@@ -54,6 +58,7 @@
         <div>
           <span>Skipped fit</span>
           <strong id="skippedFit">0</strong>
+          <small id="fitMode">strict</small>
         </div>
         <button id="markdownButton" type="button" disabled>Markdown</button>
       </section>
@@ -71,7 +76,7 @@
               <th>Age</th>
               <th>Score</th>
               <th>Why</th>
-              <th>Open</th>
+              <th>Role Link</th>
             </tr>
           </thead>
           <tbody id="resultsBody"></tbody>
@@ -81,4 +86,3 @@
     <script src="/static/app.js" defer></script>
   </body>
 </html>
-

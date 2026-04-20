@@ -24,6 +24,7 @@ class JobSearchOverrides:
     location: str | None = None
     max_age_days: int | None = None
     include_unknown_age: bool | None = None
+    include_low_fit: bool | None = None
     limit: int | None = None
 
 
@@ -61,6 +62,7 @@ def build_instant_job_search_request(
             if overrides.include_unknown_age is None
             else overrides.include_unknown_age
         ),
+        include_low_fit=bool(overrides.include_low_fit),
         limit=overrides.limit or 25,
     )
 

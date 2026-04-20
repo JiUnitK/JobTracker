@@ -8,6 +8,7 @@ class WebConfigSummary(BaseModel):
     default_location: str | None = None
     max_age_days: int = 7
     include_unknown_age: bool = False
+    include_low_fit: bool = False
     default_limit: int = 25
     enabled_instant_search_sources: list[str] = Field(default_factory=list)
 
@@ -18,3 +19,4 @@ class InstantJobSearchApiRequest(BaseModel):
     days: int | None = Field(default=None, ge=1, le=90)
     limit: int = Field(default=25, ge=1, le=100)
     include_unknown_age: bool = False
+    include_low_fit: bool = False

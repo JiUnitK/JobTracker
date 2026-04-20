@@ -81,3 +81,62 @@ def test_score_instant_job_result_keeps_unknown_age_reason_when_included() -> No
     assert scored.relevant is True
     assert "age unknown" in scored.result.reasons
 
+
+def test_score_instant_job_result_rejects_indeed_search_pages() -> None:
+    config = load_app_config(Path("config"))
+    result = InstantJobSearchResult(
+        title=(
+            "Flexible Remote Software Engineer Jobs - Apply Today to Work From Home "
+            "in Austin, TX (February 23, 2026)"
+        ),
+        company="Indeed",
+        location="Remote",
+        workplace_type="remote",
+        url="https://www.indeed.com/q-remote-software-engineer-l-austin-tx-jobs.html",
+        age_days=0,
+        age_text="today",
+        age_confidence="low",
+    )
+
+    scored = score_instant_job_result(result, _request(), config)
+
+    assert scored.relevant is False
+    assert scored.result.score == 0
+    assert scored.result.reasons == ["job-board search result, not a role posting"]
+
+
+def test_score_instant_job_result_rejects_linkedin_collection_pages() -> None:
+    config = load_app_config(Path("config"))
+    result = InstantJobSearchResult(
+        title="790 Remote Software jobs in Austin, Texas Metropolitan Area",
+        company=None,
+        location="Remote",
+        workplace_type="remote",
+        url="https://www.linkedin.com/jobs/remote-software-jobs-austin-texas-metropolitan-area",
+        age_days=4,
+        age_confidence="medium",
+    )
+
+    scored = score_instant_job_result(result, _request(), config)
+
+    assert scored.relevant is False
+    assert scored.result.reasons == ["job-board search result, not a role posting"]
+
+
+def test_score_instant_job_result_allows_actual_linkedin_role_pages() -> None:
+    config = load_app_config(Path("config"))
+    result = InstantJobSearchResult(
+        title="Backend Engineer",
+        company="Example Health",
+        location="Remote",
+        workplace_type="remote",
+        url="https://www.linkedin.com/jobs/view/1234567890",
+        snippet="Python APIs role posted 1 day ago",
+        age_days=1,
+        age_confidence="medium",
+    )
+
+    scored = score_instant_job_result(result, _request(), config)
+
+    assert scored.relevant is True
+    assert "job board source" in scored.result.reasons
