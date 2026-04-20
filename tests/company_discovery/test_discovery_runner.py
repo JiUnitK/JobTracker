@@ -23,14 +23,21 @@ from jobtracker.storage import (
 )
 
 
+def _disable_all_sources(app_config) -> None:
+    """Disable all sources so each test controls exactly which ones run."""
+    for source in app_config.company_discovery.sources:
+        source.enabled = False
+
+
 def test_company_discovery_runner_persists_discovery_records(sqlite_database_url: str) -> None:
     app_config = load_app_config(Path("config"))
+    _disable_all_sources(app_config)
     app_config.company_discovery.sources[0].enabled = True
-    app_config.company_discovery.sources[1].enabled = True
+    app_config.company_discovery.sources[3].enabled = True
     app_config.company_discovery.sources[0].params["results"] = json.loads(
         Path("tests/fixtures/company_search_results.json").read_text(encoding="utf-8")
     )
-    app_config.company_discovery.sources[1].params["entries"] = json.loads(
+    app_config.company_discovery.sources[3].params["entries"] = json.loads(
         Path("tests/fixtures/austin_ecosystem_entries.json").read_text(encoding="utf-8")
     )
 
@@ -68,12 +75,13 @@ def test_company_discovery_runner_persists_discovery_records(sqlite_database_url
 
 def test_company_discovery_runner_supports_fetched_source_material(sqlite_database_url: str) -> None:
     app_config = load_app_config(Path("config"))
+    _disable_all_sources(app_config)
     app_config.company_discovery.sources[0].enabled = True
-    app_config.company_discovery.sources[1].enabled = True
+    app_config.company_discovery.sources[3].enabled = True
     app_config.company_discovery.sources[0].params = {
         "results_urls": ["https://example.com/company-search.json"]
     }
-    app_config.company_discovery.sources[1].params = {
+    app_config.company_discovery.sources[3].params = {
         "entries_urls": ["https://example.com/austin-ecosystem.json"]
     }
 
@@ -110,6 +118,7 @@ def test_company_discovery_runner_supports_fetched_source_material(sqlite_databa
 
 def test_company_discovery_runner_supports_query_driven_search_sources(sqlite_database_url: str) -> None:
     app_config = load_app_config(Path("config"))
+    _disable_all_sources(app_config)
     app_config.company_discovery.sources[0].enabled = True
     app_config.company_discovery.sources[1].enabled = False
     app_config.company_discovery.queries = [
@@ -162,16 +171,17 @@ def test_company_discovery_runner_supports_query_driven_search_sources(sqlite_da
 
 def test_company_discovery_runner_merges_cross_source_directory_evidence(sqlite_database_url: str) -> None:
     app_config = load_app_config(Path("config"))
+    _disable_all_sources(app_config)
     app_config.company_discovery.sources[0].enabled = True
-    app_config.company_discovery.sources[1].enabled = True
-    app_config.company_discovery.sources[2].enabled = True
+    app_config.company_discovery.sources[3].enabled = True
+    app_config.company_discovery.sources[4].enabled = True
     app_config.company_discovery.sources[0].params["results"] = json.loads(
         Path("tests/fixtures/company_search_results.json").read_text(encoding="utf-8")
     )
-    app_config.company_discovery.sources[1].params["entries"] = json.loads(
+    app_config.company_discovery.sources[3].params["entries"] = json.loads(
         Path("tests/fixtures/austin_ecosystem_entries.json").read_text(encoding="utf-8")
     )
-    app_config.company_discovery.sources[2].params["entries"] = json.loads(
+    app_config.company_discovery.sources[4].params["entries"] = json.loads(
         Path("tests/fixtures/company_directory_entries.json").read_text(encoding="utf-8")
     )
 
@@ -203,6 +213,7 @@ def test_company_discovery_runner_merges_cross_source_directory_evidence(sqlite_
 
 def test_company_discovery_runner_resolves_ats_pattern_results(sqlite_database_url: str) -> None:
     app_config = load_app_config(Path("config"))
+    _disable_all_sources(app_config)
     app_config.company_discovery.sources[0].enabled = True
     app_config.company_discovery.sources[1].enabled = False
     app_config.company_discovery.sources[2].enabled = False

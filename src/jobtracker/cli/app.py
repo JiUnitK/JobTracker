@@ -257,6 +257,7 @@ def list_discovered_companies(
 @discover_companies_app.command("inbox")
 def discovery_inbox(
     database_url: str = typer.Option("", "--database-url", help="Database URL to read from."),
+    new_only: bool = typer.Option(False, "--new-only", help="Show only companies discovered for the first time in the last run."),
     limit: int = typer.Option(10, "--limit", help="Maximum number of discoveries to display."),
 ) -> None:
     """Show the company-first discovery inbox with the most actionable discoveries."""
@@ -264,6 +265,7 @@ def discovery_inbox(
     filters = CompanyDiscoveryReportFilters(
         discovery_status="candidate",
         sort_by="actionable",
+        new_only=new_only,
         limit=limit,
     )
     with session_factory() as session:
@@ -498,6 +500,32 @@ def promote_discovered_company(
             f"Promoted {promoted.display_name} into tracked monitoring via "
             f"{selected.platform}:{selected.identifier}"
         )
+
+
+@discover_companies_app.command("fingerprint")
+def fingerprint_discovered_companies(
+    database_url: str = typer.Option("", "--database-url", help="Database URL to use."),
+) -> None:
+    """Probe Greenhouse, Lever, and Ashby for unresolved discovered companies."""
+    from jobtracker.company_discovery.fingerprinting import ATSFingerprintingService
+
+    settings = get_database_settings(database_url or None)
+    upgrade_database(settings.url)
+    session_factory = create_session_factory(settings)
+
+    with session_factory() as session:
+        service = ATSFingerprintingService(session)
+        results = service.fingerprint_unresolved()
+        session.commit()
+
+    if not results:
+        typer.echo("No new ATS boards found for unresolved companies.")
+        return
+
+    typer.echo(f"Found ATS boards for {len(results)} companies:")
+    for name, hits in results.items():
+        for hit in hits:
+            typer.echo(f"  {name} → {hit.platform}:{hit.slug} ({hit.board_url})")
 
 
 @discover_companies_app.command("ignore")

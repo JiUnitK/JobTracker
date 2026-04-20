@@ -36,6 +36,7 @@ class CompanyDiscoveryReportFilters:
     min_score: int | None = None
     discovery_status: str | None = None
     resolution_status: str | None = None
+    new_only: bool = False
     limit: int = 20
     sort_by: str = "discovery"
 
@@ -268,5 +269,14 @@ class ReportingService:
             cutoff = to_utc_naive(utc_now() - timedelta(days=filters.recent_days))
             last_seen = to_utc_naive(discovery.last_discovered_at)
             if last_seen is None or cutoff is None or last_seen < cutoff:
+                return False
+        if filters.new_only:
+            first = to_utc_naive(discovery.first_discovered_at)
+            last = to_utc_naive(discovery.last_discovered_at)
+            if first is None or last is None:
+                return False
+            # "New" means first and last discovery timestamps are within the same
+            # run — i.e. the company has never been seen in a prior run.
+            if abs((last - first).total_seconds()) > 5:
                 return False
         return True

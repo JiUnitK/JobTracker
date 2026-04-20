@@ -1,0 +1,57 @@
+[
+  {
+    "legal": "RemoteOK.com jobs API. Usage subject to terms of service."
+  },
+  {
+    "id": "remote-jobs-123456",
+    "epoch": 1713484800,
+    "date": "2026-04-19T00:00:00Z",
+    "company": "Northwind Systems",
+    "company_url": "https://northwindsystems.dev",
+    "url": "https://remoteok.com/remote-jobs/123456",
+    "position": "Backend Engineer",
+    "tags": ["python", "backend", "postgresql", "remote"],
+    "location": "Worldwide",
+    "description": "<p>Northwind Systems is a remote infrastructure company seeking a skilled backend engineer. We build distributed systems using Python and PostgreSQL. Join our fully remote team to work on high-scale backend infrastructure challenges.</p>",
+    "apply_url": "https://jobs.lever.co/northwindsystems/abc123"
+  },
+  {
+    "id": "remote-jobs-234567",
+    "epoch": 1713484800,
+    "date": "2026-04-19T00:00:00Z",
+    "company": "Pulse Labs",
+    "company_url": "https://pulselabs.dev",
+    "url": "https://remoteok.com/remote-jobs/234567",
+    "position": "Software Engineer",
+    "tags": ["typescript", "software engineer", "remote", "saas"],
+    "location": "USA Only",
+    "description": "<p>Pulse Labs builds developer tooling for modern software teams. We are looking for a software engineer to join our remote-first team and help build our core platform.</p>",
+    "apply_url": "https://boards.greenhouse.io/pulselabs"
+  },
+  {
+    "id": "remote-jobs-345678",
+    "epoch": 1713484800,
+    "date": "2026-04-19T00:00:00Z",
+    "company": "DesignCo",
+    "company_url": "https://designco.io",
+    "url": "https://remoteok.com/remote-jobs/345678",
+    "position": "UI Designer",
+    "tags": ["design", "figma", "remote"],
+    "location": "Worldwide",
+    "description": "<p>DesignCo is hiring a UI Designer to help shape our product's visual language. No engineering roles at this time.</p>",
+    "apply_url": "https://designco.io/careers"
+  },
+  {
+    "id": "remote-jobs-456789",
+    "epoch": 1713400000,
+    "date": "2026-04-18T00:00:00Z",
+    "company": "Northwind Systems",
+    "company_url": "https://northwindsystems.dev",
+    "url": "https://remoteok.com/remote-jobs/456789",
+    "position": "Platform Engineer",
+    "tags": ["platform", "backend", "remote"],
+    "location": "Worldwide",
+    "description": "<p>Second listing for Northwind — should be deduplicated by the adapter.</p>",
+    "apply_url": "https://jobs.lever.co/northwindsystems/xyz789"
+  }
+]

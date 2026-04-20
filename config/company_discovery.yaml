@@ -40,6 +40,21 @@ sources:
       query_url_template: ""
       results_payload_key: results
 
+  # RemoteOK public feed — no API key required. Fetches all remote tech jobs and
+  # filters client-side by configured keywords. All entries are workplace_type=remote.
+  - name: remote_ok
+    type: aggregator
+    enabled: true
+    params:
+      feed_url: "https://remoteok.com/api"
+
+  # Hacker News "Who is hiring?" monthly thread — no API key required. Auto-detects
+  # the current month's thread via HN Algolia. Pin a specific thread with story_id.
+  - name: hn_whos_hiring
+    type: aggregator
+    enabled: true
+    params: {}
+
   # Austin-based and Austin-presence tech companies. Update careers_url to ATS board
   # URLs (boards.greenhouse.io/..., jobs.lever.co/...) as you verify each company.
   - name: austin_ecosystem
