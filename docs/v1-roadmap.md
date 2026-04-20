@@ -7,7 +7,7 @@ Make JobTracker useful in two complementary modes:
 1. instant relevant-job search for a user who wants fresh postings now
 2. company-first discovery and tracking for users who want a longer-running watchlist workflow
 
-The next priority is the instant job-search workflow. It should be easy to configure for a non-technical job seeker, run from the CLI first, and later become the foundation for a simple GUI.
+The next priority is the instant job-search workflow. It should be easy to configure for a non-technical job seeker, run from the CLI first, and become the foundation for a local browser GUI.
 
 ## Current State
 
@@ -45,8 +45,8 @@ This workflow should:
 - search for postings no older than a configurable number of days
 - use the user's local config for keywords, locations, workplace preferences, exclusions, and scoring
 - work for non-tech job searches without requiring tech-specific source setup
-- start as CLI-only
-- return structured results so a GUI can be added without rewriting the search logic
+- keep the CLI as a stable automation surface
+- return structured results so a local web GUI can wrap the search logic without rewriting it
 
 This is not a replacement for the company-first workflow. It is a faster front door for people who want current job postings without building a company watchlist first.
 
@@ -232,7 +232,57 @@ Focus:
 
 Objective:
 
-Prepare the CLI implementation so a GUI can wrap it cleanly.
+Prepare the instant-search implementation for a local browser GUI, then build the first usable GUI around it.
+
+Chosen direction:
+
+- Build a small local web app.
+- Use a Python web backend so the GUI can call existing `jobtracker.job_search` services directly.
+- Prefer FastAPI plus Uvicorn for the backend because the project already uses Pydantic models and typed request/response objects.
+- Serve a static HTML/CSS/JS frontend from the same local process.
+- Keep the app local-first at `http://127.0.0.1:<port>` and avoid database writes for instant search unless a later workflow explicitly adds saved searches.
+
+Target local command:
+
+```powershell
+python -m jobtracker web
+```
+
+Target package shape:
+
+```text
+src/jobtracker/web/
+  __init__.py
+  app.py
+  schemas.py
+  static/
+    index.html
+    styles.css
+    app.js
+```
+
+Target backend routes:
+
+```text
+GET /
+  Serve the instant-search UI.
+
+GET /api/config/summary
+  Return defaults for query, location, max age, limit, include-unknown-age, and enabled instant-search sources.
+
+POST /api/search/jobs
+  Accept query, location, days, limit, and include_unknown_age.
+  Run InstantJobSearchRunner.
+  Return InstantJobSearchRunSummary JSON.
+```
+
+Target first screen:
+
+- Search form with role/query, location, max age, result limit, and include-unknown-age controls.
+- Summary strip with result count, max age, skipped-for-age count, and skipped-for-relevance count.
+- Dense ranked results table with title, company, location/workplace, age/confidence, score, reasons, and open-link action.
+- Loading, empty, and error states, including a clear missing `BRAVE_SEARCH_API_KEY` message.
+- Markdown export or copy/download from the current result set after the initial table is working.
 
 Focus:
 
@@ -240,7 +290,19 @@ Focus:
 - provide JSON output for integration testing and prototype UI work
 - avoid terminal-only formatting in the core runner
 - design result fields for card/table display: title, company, location, age, score, URL, reasons
-- later add a GUI with fields for role, location, max age, remote preference, and result count
+- add a local API layer that adapts web requests into `JobSearchOverrides`
+- add the static frontend without moving search logic into JavaScript
+- add backend route tests with an injected/fake runner
+- add browser-level smoke tests once the page is interactive
+
+Delivery steps:
+
+1. Add GUI-readiness tests for the existing JSON shape and API-facing request fields.
+2. Add FastAPI/Uvicorn dependencies and a `jobtracker.web` package.
+3. Implement `/api/config/summary` and `/api/search/jobs` around the existing config loader and runner.
+4. Add `python -m jobtracker web` to start the local server.
+5. Build the static frontend as the first screen, not a landing page.
+6. Add tests for route success, missing API-key/error responses, static asset serving, and basic browser rendering.
 
 ## Company-First Workflow Maintenance
 
@@ -275,4 +337,5 @@ Before a roadmap item is considered done:
 3. Implement the Brave Search adapter with fixtures and API-key validation.
 4. Add `python -m jobtracker search jobs` with CLI overrides for days, query, location, limit, JSON, and unknown-age handling.
 5. Implement age filtering, relevance scoring, and concise CLI reporting.
-6. Re-run the workflow with non-tech search terms and tune query templates based on result quality.
+6. Finish GUI readiness and implement the local FastAPI/static HTML browser UI.
+7. Re-run the workflow with non-tech search terms and tune query templates based on result quality.

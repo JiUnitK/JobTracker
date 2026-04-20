@@ -11,7 +11,7 @@ The tool should help answer two questions:
 
 ## Product Scope for v1
 
-v1 is focused on a reliable backend pipeline and useful outputs, not a polished UI.
+v1 is focused on a reliable backend pipeline and useful outputs. The first GUI should be a local browser UI for instant job search, built only after the typed runner and JSON output are stable.
 
 Included in v1:
 
@@ -21,12 +21,13 @@ Included in v1:
 - Deduplication and change tracking across repeated runs
 - Explainable fit and hiring scoring
 - CLI commands to run searches and inspect/export results
+- Local browser UI for instant job search
 
 Not included in v1:
 
 - Browser automation as the default strategy
 - Complex AI-first extraction pipeline
-- Full web dashboard
+- Hosted or multi-user web dashboard
 - Automated application submission
 - CRM-style interview pipeline management
 
@@ -415,7 +416,39 @@ Example outputs:
 - Newly discovered roles since the last run
 - Roles that appear to have gone stale or closed
 
-CSV and Markdown export are both useful for v1. A web dashboard can come later once the underlying model is stable.
+CSV and Markdown export are both useful for v1. A local browser UI can now wrap the instant-search workflow once the underlying model is stable. A hosted dashboard can come later.
+
+### 7. Local Browser UI Layer
+
+The first GUI should be a local web app rather than a native desktop toolkit.
+
+Recommended shape:
+
+- FastAPI backend served from the existing Python process
+- Uvicorn local development/server command
+- Static HTML/CSS/JS frontend
+- JSON API backed by `jobtracker.job_search.runner.InstantJobSearchRunner`
+
+Why this route:
+
+- Reuses existing Pydantic models and typed runner outputs
+- Avoids duplicating search/scoring logic in JavaScript
+- Keeps the app local-first and easy to run
+- Can later be wrapped by desktop packaging or deployed as a hosted service if needed
+
+Initial backend routes:
+
+- `GET /` serves the static instant-search page
+- `GET /api/config/summary` returns UI defaults from local config
+- `POST /api/search/jobs` runs instant search and returns structured JSON
+
+Initial frontend:
+
+- Query, location, max-age, limit, and include-unknown-age controls
+- Ranked results table
+- Score and concise reason display
+- Loading, empty, and error states
+- Link opening and Markdown export affordances
 
 ## Broad Data Flow
 
@@ -592,7 +625,8 @@ jobtracker/
 
 - Additional sources
 - Company enrichment
-- Optional dashboard
+- Local instant-search browser UI
+- Optional hosted dashboard later
 - Optional AI-assisted extraction/summarization
 
 ## Recommended v1 Decisions
@@ -606,7 +640,7 @@ If we want a practical and maintainable first version, the following decisions a
 - Store raw observations for historical analysis
 - Keep scoring rule-based and explainable
 - Prioritize structured ATS sources before LinkedIn/Indeed
-- Start with CLI outputs instead of a UI
+- Start with CLI outputs, then add a local browser UI once instant-search JSON is stable
 
 ## Open Design Questions
 
