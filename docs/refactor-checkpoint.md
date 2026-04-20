@@ -63,6 +63,17 @@ Recommended outcome:
 
 This should be behavior-preserving and backed by the existing CLI tests.
 
+Status:
+
+- Done. `cli/app.py` is now the Typer root and command registration point.
+- Workflow command groups live in focused CLI modules:
+  - `cli/company_discovery.py`
+  - `cli/tracked_jobs.py`
+  - `cli/sources.py`
+  - `cli/config.py`
+  - `cli/database.py`
+  - `cli/common.py`
+
 ### 3. Reduce Repository Class Size Before Adding New Persistence
 
 `src/jobtracker/storage/repositories.py` currently holds source, run, job,
@@ -81,6 +92,18 @@ Recommended outcome:
   - `storage/discovery_repository.py`
 - keep `storage/__init__.py` as the public import surface during migration
 - do not change schema behavior in this cleanup pass
+
+Status:
+
+- Done. Repository implementations now live in domain modules:
+  - `storage/source_repository.py`
+  - `storage/run_repository.py`
+  - `storage/company_repository.py`
+  - `storage/job_repository.py`
+  - `storage/discovery_repository.py`
+  - `storage/repository_utils.py`
+- `storage/repositories.py` remains as a compatibility export module.
+- `storage/__init__.py` still preserves the public repository imports.
 
 ### 4. Separate Shared Domain Models From Workflow Models
 
@@ -129,7 +152,9 @@ Recommended test cadence:
    packages as compatibility shims. Done in
    [package-boundaries.md](package-boundaries.md).
 2. Split CLI command groups into focused modules without changing command names.
+   Done with `cli/app.py` preserved as the root registration point.
 3. Split storage repositories by domain while preserving existing imports.
+   Done with `storage/repositories.py` kept as a compatibility shim.
 4. Move or document any remaining legacy imports.
 5. Add instant-search config models and tests.
 6. Create `jobtracker.job_search` with typed models and no side effects.

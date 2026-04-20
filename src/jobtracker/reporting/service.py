@@ -9,7 +9,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from jobtracker.storage.orm import CompanyDiscoveryORM, CompanyORM, JobORM
-from jobtracker.storage.repositories import CompanyActivityRepository, to_utc_naive
+from jobtracker.storage.company_repository import CompanyActivityRepository
+from jobtracker.storage.repository_utils import to_utc_naive
 
 
 def utc_now() -> datetime:

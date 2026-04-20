@@ -10,7 +10,7 @@ from urllib.request import Request, urlopen
 from sqlalchemy.orm import Session
 
 from jobtracker.storage.orm import CompanyDiscoveryORM
-from jobtracker.storage.repositories import CompanyResolutionRepository
+from jobtracker.storage.discovery_repository import CompanyResolutionRepository
 
 
 _PROBE_TIMEOUT = 8.0
