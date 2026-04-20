@@ -140,6 +140,24 @@ def _best_resolution_text(payload: dict) -> str:
     return "-"
 
 
+def _best_resolution_url(payload: dict) -> str:
+    best_resolution = payload.get("best_resolution")
+    if isinstance(best_resolution, dict):
+        url = str(best_resolution.get("url", "") or "").strip()
+        if url:
+            return url
+    return ""
+
+
+def _company_site_text(discovery, payload: dict) -> str:
+    return (
+        str(discovery.company_url or "").strip()
+        or str(discovery.careers_url or "").strip()
+        or _best_resolution_url(payload)
+        or "-"
+    )
+
+
 def _score_bar(score: int | None, *, width: int = 10) -> str:
     value = max(0, min(100, int(score or 0)))
     filled = round((value / 100) * width)
@@ -313,8 +331,10 @@ def discovery_inbox(
         payload = _discovery_payload(discovery)
         source_text = _source_text(payload)
         best_text = _best_resolution_text(payload)
+        site_text = _company_site_text(discovery, payload)
         next_action = describe_discovery_action(discovery)
         typer.echo(f"{index}. {discovery.display_name}")
+        typer.echo(f"   Site:       {site_text}")
         typer.echo(f"   Next:       {_action_label(next_action)}")
         typer.echo(
             "   Scores:     "

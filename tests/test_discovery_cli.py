@@ -45,6 +45,7 @@ def _seed_discovery_data(sqlite_database_url: str) -> None:
                 normalized_name="pulse-labs",
                 display_name="Pulse Labs",
                 source_url="https://example-search.com/pulse",
+                company_url="https://pulselabs.dev",
                 careers_url="https://boards.greenhouse.io/pulselabs",
                 job_title="Backend Engineer",
                 location_text="Austin, TX",
@@ -60,6 +61,7 @@ def _seed_discovery_data(sqlite_database_url: str) -> None:
                 source_type="search",
                 source_url="https://example-search.com/pulse",
                 company_name="Pulse Labs",
+                company_url="https://pulselabs.dev",
                 careers_url="https://boards.greenhouse.io/pulselabs",
                 job_title="Backend Engineer",
                 location_text="Austin, TX",
@@ -160,6 +162,7 @@ def test_discovery_cli_inbox_is_company_first_entrypoint(sqlite_database_url: st
     assert "Discovery Inbox" in result.stdout
     assert "Summary: 2 candidates, 1 ready to promote, 1 need resolution, 0 tracked" in result.stdout
     assert "1. Pulse Labs" in result.stdout
+    assert "Site:       https://pulselabs.dev" in result.stdout
     assert "Next:       Promote" in result.stdout
     assert "Resolution: resolved | best greenhouse:pulselabs" in result.stdout
     assert "Sources:    company_search" in result.stdout

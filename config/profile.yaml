@@ -9,6 +9,12 @@ target_titles:
   - infrastructure engineer
   - systems software engineer
   - c++ software engineer
+  - low latency engineer
+  - high performance computing engineer
+  - trading systems engineer
+  - quantitative developer
+  - market data engineer
+  - hft engineer
   - data infrastructure engineer
   - observability engineer
   - telemetry engineer
@@ -17,12 +23,15 @@ preferred_skills:
   - C++
   - Python
   - distributed systems
+  - low latency
+  - high performance
+  - real-time systems
+  - concurrency
   - data pipelines
+  - market data
+  - trading systems
   - observability
   - APIs
-  - embedded
-  - RTOS
-  - firmware
 preferred_locations:
   - Austin, TX
   - Remote
@@ -39,5 +48,16 @@ excluded_keywords:
   - sales engineer
   - qa engineer
   - manual qa
+  - fpga only
   - principal only
-target_companies: []
+target_companies:
+  - Jane Street
+  - Hudson River Trading
+  - HRT
+  - Citadel Securities
+  - Two Sigma
+  - DRW
+  - Jump Trading
+  - IMC
+  - Optiver
+  - Akuna Capital
