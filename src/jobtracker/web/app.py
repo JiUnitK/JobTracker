@@ -50,7 +50,8 @@ def create_app(
                     location=payload.location,
                     max_age_days=payload.days,
                     include_unknown_age=payload.include_unknown_age,
-                    include_low_fit=payload.include_low_fit,
+                    use_profile_matching=payload.use_profile_matching,
+                    source_mode=payload.source_mode,
                     limit=payload.limit,
                 ),
             )
@@ -75,7 +76,8 @@ def build_web_config_summary(app_config: AppConfig) -> WebConfigSummary:
         ),
         max_age_days=search_settings.max_age_days,
         include_unknown_age=search_settings.include_unknown_age,
-        include_low_fit=False,
+        use_profile_matching=False,
+        source_mode="strict",
         enabled_instant_search_sources=[
             source.name for source in app_config.job_search.enabled_sources()
         ],

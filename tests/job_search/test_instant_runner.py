@@ -25,21 +25,21 @@ class FixtureAdapter(InstantJobSearchAdapter):
             RawInstantSearchResult(
                 source_id="fresh",
                 title="Backend Engineer - Example Health",
-                url="https://example.com/jobs/fresh",
+                url="https://boards.greenhouse.io/examplehealth/jobs/123",
                 snippet="Remote Python role posted 2 days ago",
                 age_text="2 days ago",
             ),
             RawInstantSearchResult(
                 source_id="old",
                 title="Backend Engineer - Old Co",
-                url="https://example.com/jobs/old",
+                url="https://boards.greenhouse.io/oldco/jobs/123",
                 snippet="Remote Python role posted 4 weeks ago",
                 age_text="4 weeks ago",
             ),
             RawInstantSearchResult(
                 source_id="excluded",
                 title="Backend Engineer Internship",
-                url="https://example.com/jobs/internship",
+                url="https://boards.greenhouse.io/examplehealth/jobs/456",
                 snippet="Remote Python internship posted 1 day ago",
                 age_text="1 day ago",
             ),
@@ -58,13 +58,13 @@ class UnknownAgeAdapter(InstantJobSearchAdapter):
             RawInstantSearchResult(
                 source_id="unknown-age",
                 title="Backend Engineer - Mystery Co",
-                url="https://example.com/jobs/mystery",
+                url="https://boards.greenhouse.io/mysteryco/jobs/123",
                 snippet="Remote Python role",
             )
         ]
 
 
-class LowFitAdapter(InstantJobSearchAdapter):
+class LowScoreAdapter(InstantJobSearchAdapter):
     source_name = "brave_search"
 
     def search(
@@ -74,11 +74,10 @@ class LowFitAdapter(InstantJobSearchAdapter):
     ) -> list[RawInstantSearchResult]:
         return [
             RawInstantSearchResult(
-                source_id="low-fit",
+                source_id="low-score",
                 title="Community Events Coordinator - Example Health",
-                url="https://example.com/events/community-coordinator",
-                snippet="Austin, TX role posted 1 day ago",
-                age_text="1 day ago",
+                url="https://boards.greenhouse.io/examplehealth/jobs/789",
+                snippet="Community programming role.",
             )
         ]
 
@@ -140,25 +139,10 @@ def test_runner_includes_unknown_age_when_requested() -> None:
     assert summary.results[0].age_confidence == "unknown"
 
 
-def test_runner_excludes_low_fit_by_default() -> None:
+def test_runner_excludes_low_score_results_by_default() -> None:
     app_config = load_app_config(Path("config"))
     registry = InstantJobSearchRegistry()
-    registry.register(LowFitAdapter())
-
-    summary = InstantJobSearchRunner(registry).run(
-        app_config,
-        JobSearchOverrides(query="backend engineer", location="Remote", max_age_days=7),
-        now=datetime(2026, 4, 20, tzinfo=timezone.utc),
-    )
-
-    assert summary.skipped_for_relevance >= 1
-    assert summary.results == []
-
-
-def test_runner_includes_low_fit_when_requested() -> None:
-    app_config = load_app_config(Path("config"))
-    registry = InstantJobSearchRegistry()
-    registry.register(LowFitAdapter())
+    registry.register(LowScoreAdapter())
 
     summary = InstantJobSearchRunner(registry).run(
         app_config,
@@ -166,15 +150,35 @@ def test_runner_includes_low_fit_when_requested() -> None:
             query="backend engineer",
             location="Remote",
             max_age_days=7,
-            include_low_fit=True,
+            include_unknown_age=True,
         ),
         now=datetime(2026, 4, 20, tzinfo=timezone.utc),
     )
 
-    assert summary.include_low_fit is True
-    assert summary.skipped_for_relevance == 0
-    assert len(summary.results) == 1
-    assert summary.results[0].title == "Community Events Coordinator"
+    assert summary.skipped_for_relevance >= 1
+    assert summary.results == []
+
+
+def test_runner_always_excludes_low_score_results() -> None:
+    app_config = load_app_config(Path("config"))
+    registry = InstantJobSearchRegistry()
+    registry.register(LowScoreAdapter())
+
+    summary = InstantJobSearchRunner(registry).run(
+        app_config,
+        JobSearchOverrides(
+            query="backend engineer",
+            location="Remote",
+            max_age_days=7,
+            include_unknown_age=True,
+            use_profile_matching=True,
+        ),
+        now=datetime(2026, 4, 20, tzinfo=timezone.utc),
+    )
+
+    assert summary.use_profile_matching is True
+    assert summary.skipped_for_relevance >= 1
+    assert summary.results == []
 
 
 def test_human_summary_includes_freshness_and_reasons() -> None:

@@ -11,7 +11,6 @@
       <section class="toolbar" aria-label="Instant job search">
         <div class="brand">
           <h1>JobTracker</h1>
-          <p id="sourceStatus">Instant search</p>
         </div>
         <form id="searchForm" class="search-form">
           <label>
@@ -30,13 +29,20 @@
             <span>Limit</span>
             <input id="limitInput" name="limit" type="number" min="1" max="100" value="25">
           </label>
-          <label class="toggle">
-            <input id="unknownInput" name="include_unknown_age" type="checkbox">
-            <span>Unknown age</span>
+          <label>
+            <span>Mode</span>
+            <select id="sourceModeInput" name="source_mode">
+              <option value="strict">Strict roles</option>
+              <option value="broad">Broad web</option>
+            </select>
           </label>
           <label class="toggle">
-            <input id="lowFitInput" name="include_low_fit" type="checkbox">
-            <span>Low fit</span>
+            <input id="unknownInput" name="include_unknown_age" type="checkbox">
+            <span>Include listings of unknown age</span>
+          </label>
+          <label class="toggle">
+            <input id="profileMatchingInput" name="use_profile_matching" type="checkbox">
+            <span>Use personalized profile matching</span>
           </label>
           <button id="searchButton" type="submit">Search</button>
         </form>
@@ -56,11 +62,14 @@
           <strong id="skippedAge">0</strong>
         </div>
         <div>
-          <span>Skipped fit</span>
+          <span>Skipped score</span>
           <strong id="skippedFit">0</strong>
-          <small id="fitMode">strict</small>
+          <small id="profileMode">profile off</small>
         </div>
-        <button id="markdownButton" type="button" disabled>Markdown</button>
+        <div>
+          <span>Source mode</span>
+          <strong id="sourceMode">strict</strong>
+        </div>
       </section>
 
       <p id="statusMessage" class="status" role="status"></p>

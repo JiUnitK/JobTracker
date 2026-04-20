@@ -42,14 +42,9 @@ body {
   font-weight: 760;
 }
 
-.brand p {
-  margin: 6px 0 0;
-  color: var(--muted);
-}
-
 .search-form {
   display: grid;
-  grid-template-columns: minmax(180px, 1.6fr) minmax(160px, 1.2fr) 88px 88px 136px 104px 104px;
+  grid-template-columns: minmax(160px, 1.4fr) minmax(140px, 1fr) 78px 78px 128px minmax(210px, 1fr) minmax(260px, 1.2fr) 96px;
   gap: 10px;
   align-items: end;
 }
@@ -68,6 +63,17 @@ label span {
 }
 
 input {
+  width: 100%;
+  height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 10px;
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+}
+
+select {
   width: 100%;
   height: 38px;
   border: 1px solid var(--line);
@@ -128,13 +134,12 @@ button:disabled {
 
 .summary {
   display: grid;
-  grid-template-columns: repeat(4, minmax(120px, 1fr)) 128px;
+  grid-template-columns: repeat(5, minmax(120px, 1fr));
   gap: 10px;
   margin: 18px 0;
 }
 
-.summary div,
-.summary button {
+.summary div {
   min-height: 56px;
 }
 

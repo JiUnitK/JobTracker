@@ -30,7 +30,8 @@ class InstantJobSearchRunner:
             requested_queries=request.queries,
             max_age_days=request.max_age_days,
             include_unknown_age=request.include_unknown_age,
-            include_low_fit=request.include_low_fit,
+            use_profile_matching=request.use_profile_matching,
+            source_mode=request.source_mode,
         )
         results_by_key = {}
 
@@ -47,7 +48,7 @@ class InstantJobSearchRunner:
                         summary.skipped_for_age += 1
                         continue
                     scored = score_instant_job_result(normalized, request, app_config)
-                    if not scored.relevant and not request.include_low_fit:
+                    if not scored.relevant:
                         summary.skipped_for_relevance += 1
                         continue
                     key = canonical_result_key(scored.result)

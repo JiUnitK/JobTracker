@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from jobtracker.config.models import AppConfig
-from jobtracker.job_search.models import InstantJobSearchQuery, InstantJobSearchRequest
+from jobtracker.job_search.models import InstantJobSearchQuery, InstantJobSearchRequest, SourceMode
 from jobtracker.models import WorkplaceType
 
 
@@ -24,7 +24,8 @@ class JobSearchOverrides:
     location: str | None = None
     max_age_days: int | None = None
     include_unknown_age: bool | None = None
-    include_low_fit: bool | None = None
+    use_profile_matching: bool | None = None
+    source_mode: SourceMode | None = None
     limit: int | None = None
 
 
@@ -33,9 +34,10 @@ def build_instant_job_search_request(
     overrides: JobSearchOverrides | None = None,
 ) -> InstantJobSearchRequest:
     overrides = overrides or JobSearchOverrides()
-    base_queries = _query_terms(app_config, overrides.query)
-    locations = _locations(app_config, overrides.location)
-    workplace_types = _workplace_types(app_config)
+    use_profile_matching = bool(overrides.use_profile_matching)
+    base_queries = _query_terms(app_config, overrides.query, use_profile_matching)
+    locations = _locations(app_config, overrides.location, use_profile_matching)
+    workplace_types = _workplace_types(app_config, use_profile_matching)
     templates = app_config.job_search.settings.query_templates or DEFAULT_QUERY_TEMPLATES
 
     queries: list[InstantJobSearchQuery] = []
@@ -62,39 +64,46 @@ def build_instant_job_search_request(
             if overrides.include_unknown_age is None
             else overrides.include_unknown_age
         ),
-        include_low_fit=bool(overrides.include_low_fit),
+        use_profile_matching=use_profile_matching,
+        source_mode=overrides.source_mode or "strict",
         limit=overrides.limit or 25,
     )
 
 
-def _query_terms(app_config: AppConfig, override_query: str | None) -> list[str]:
+def _query_terms(
+    app_config: AppConfig,
+    override_query: str | None,
+    use_profile_matching: bool,
+) -> list[str]:
     if override_query and override_query.strip():
         return [override_query.strip()]
-    values = (
-        app_config.job_search.settings.queries
-        or app_config.search_terms.include
-        or app_config.profile.target_titles
-    )
+    values = app_config.job_search.settings.queries or app_config.search_terms.include
+    if not values and use_profile_matching:
+        values = app_config.profile.target_titles
     cleaned = [value.strip() for value in values if value.strip()]
     if not cleaned:
-        raise ValueError("At least one include term or profile target title is required")
+        raise ValueError("At least one instant-search query or include term is required")
     return cleaned
 
 
-def _locations(app_config: AppConfig, override_location: str | None) -> list[str]:
+def _locations(
+    app_config: AppConfig,
+    override_location: str | None,
+    use_profile_matching: bool,
+) -> list[str]:
     if override_location and override_location.strip():
         return [override_location.strip()]
-    values = app_config.search_terms.locations or app_config.profile.preferred_locations
+    values = app_config.search_terms.locations
+    if not values and use_profile_matching:
+        values = app_config.profile.preferred_locations
     cleaned = [value.strip() for value in values if value.strip()]
     return cleaned or [""]
 
 
-def _workplace_types(app_config: AppConfig) -> list[WorkplaceType]:
-    values = (
-        app_config.search_terms.workplace_types
-        or app_config.profile.target_workplace_types
-        or []
-    )
+def _workplace_types(app_config: AppConfig, use_profile_matching: bool) -> list[WorkplaceType]:
+    values = app_config.search_terms.workplace_types
+    if not values and use_profile_matching:
+        values = app_config.profile.target_workplace_types
     return [value for value in values if value != "unknown"]
 
 

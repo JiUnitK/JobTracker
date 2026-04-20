@@ -241,6 +241,8 @@ Status:
 - Added `/api/config/summary` for UI defaults and `/api/search/jobs` for structured instant-search results.
 - The web API adapts requests into `JobSearchOverrides` and calls `InstantJobSearchRunner`; search logic remains in `jobtracker.job_search`.
 - Added route tests for config summary, successful search, error responses, and static asset serving.
+- Added a default strict source mode that only allows known individual-posting URL structures, with a broad web mode available as an explicit CLI/API/GUI option.
+- Added role links, opt-in personalized profile matching, and clear unknown-age labeling in the GUI.
 
 Chosen direction:
 
@@ -276,21 +278,21 @@ GET /
   Serve the instant-search UI.
 
 GET /api/config/summary
-  Return defaults for query, location, max age, limit, include-unknown-age, and enabled instant-search sources.
+  Return defaults for query, location, max age, limit, source mode, include-unknown-age, use-profile-matching, and enabled instant-search sources.
 
 POST /api/search/jobs
-  Accept query, location, days, limit, and include_unknown_age.
+  Accept query, location, days, limit, source_mode, include_unknown_age, and use_profile_matching.
   Run InstantJobSearchRunner.
   Return InstantJobSearchRunSummary JSON.
 ```
 
 Target first screen:
 
-- Search form with role/query, location, max age, result limit, and include-unknown-age controls.
-- Summary strip with result count, max age, skipped-for-age count, and skipped-for-relevance count.
+- Search form with role/query, location, source mode, max age, result limit, include-unknown-age, and personalized profile matching controls.
+- Summary strip with result count, max age, skipped-for-age count, skipped-for-relevance count, and source mode.
 - Dense ranked results table with title, company, location/workplace, age/confidence, score, reasons, and open-link action.
 - Loading, empty, and error states, including a clear missing `BRAVE_SEARCH_API_KEY` message.
-- Markdown export or copy/download from the current result set after the initial table is working.
+- Keep export workflows in the CLI unless a later GUI milestone adds a dedicated saved-report flow.
 
 Focus:
 

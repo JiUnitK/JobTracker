@@ -8,7 +8,11 @@ from jobtracker.job_search.models import InstantJobSearchRunSummary
 def format_instant_job_search_summary(summary: InstantJobSearchRunSummary) -> str:
     lines = [
         "Instant Job Search",
-        f"Max age: {summary.max_age_days} days | Results: {len(summary.results)}",
+        (
+            f"Mode: {summary.source_mode} | Profile matching: "
+            f"{'on' if summary.use_profile_matching else 'off'} | "
+            f"Max age: {summary.max_age_days} days | Results: {len(summary.results)}"
+        ),
     ]
     if summary.skipped_for_age or summary.skipped_for_relevance:
         lines.append(
@@ -44,6 +48,8 @@ def format_instant_job_search_markdown(summary: InstantJobSearchRunSummary) -> s
         "# Instant Job Search",
         "",
         f"Max age: {summary.max_age_days} days",
+        f"Mode: {summary.source_mode}",
+        f"Profile matching: {'on' if summary.use_profile_matching else 'off'}",
         f"Results: {len(summary.results)}",
         f"Skipped for age: {summary.skipped_for_age}",
         f"Skipped for relevance: {summary.skipped_for_relevance}",

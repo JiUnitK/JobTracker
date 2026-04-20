@@ -8,6 +8,28 @@ from jobtracker.job_search.models import InstantJobSearchRequest, InstantJobSear
 
 
 MIN_RELEVANCE_SCORE = 45
+_AGGREGATOR_COMPANIES = {
+    "indeed",
+    "linkedin",
+    "ziprecruiter",
+    "glassdoor",
+    "dice.com",
+    "dice",
+    "built in",
+    "built in austin",
+    "wellfound",
+    "monster",
+}
+_AGGREGATOR_HOST_HINTS = {
+    "indeed.com",
+    "linkedin.com",
+    "ziprecruiter.com",
+    "glassdoor.com",
+    "dice.com",
+    "builtin",
+    "wellfound.com",
+    "monster.com",
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,16 +46,21 @@ def score_instant_job_result(
     searchable = " ".join(
         filter(None, [result.title, result.company, result.location, result.snippet])
     ).lower()
+    profile = app_config.profile if request.use_profile_matching else None
     excluded = [
         keyword
-        for keyword in app_config.search_terms.exclude + app_config.profile.excluded_keywords
+        for keyword in app_config.search_terms.exclude + (profile.excluded_keywords if profile else [])
         if keyword.lower() in searchable
     ]
     if excluded:
         result.score = 0
         result.reasons = [f"excluded keyword: {excluded[0]}"]
         return ScoredInstantResult(result=result, relevant=False)
-    if _is_aggregator_collection_result(result, searchable):
+    if request.source_mode == "strict" and not _is_strict_role_posting_url(str(result.url)):
+        result.score = 0
+        result.reasons = ["not a confirmed role posting"]
+        return ScoredInstantResult(result=result, relevant=False)
+    if request.source_mode == "strict" and _is_aggregator_collection_result(result, searchable):
         result.score = 0
         result.reasons = ["job-board search result, not a role posting"]
         return ScoredInstantResult(result=result, relevant=False)
@@ -49,18 +76,19 @@ def score_instant_job_result(
         score += 18
         reasons.append("partial title match")
 
-    keyword_hits = _matched_terms(searchable, app_config.search_terms.include)
+    keyword_hits = _matched_terms(searchable, _scoring_keywords(request, app_config))
     if keyword_hits:
         score += min(12, 4 * len(keyword_hits))
         reasons.append(f"matched keywords: {', '.join(keyword_hits[:3])}")
 
-    preferred_skills = [skill.lower() for skill in app_config.profile.preferred_skills]
-    matched_skills = [skill for skill in preferred_skills if skill in searchable]
-    if matched_skills:
-        score += min(18, 6 * len(matched_skills))
-        reasons.append(f"matched skills: {', '.join(matched_skills[:3])}")
+    if profile:
+        preferred_skills = [skill.lower() for skill in profile.preferred_skills]
+        matched_skills = [skill for skill in preferred_skills if skill in searchable]
+        if matched_skills:
+            score += min(18, 6 * len(matched_skills))
+            reasons.append(f"profile skills: {', '.join(matched_skills[:3])}")
 
-    location_score, location_reason = _location_score(result, searchable, app_config)
+    location_score, location_reason = _location_score(result, searchable, request, app_config)
     score += location_score
     if location_reason:
         reasons.append(location_reason)
@@ -110,15 +138,41 @@ def _matched_terms(searchable: str, terms: list[str]) -> list[str]:
     return [term for term in terms if term.strip() and term.lower() in searchable]
 
 
+def _scoring_keywords(request: InstantJobSearchRequest, app_config: AppConfig) -> list[str]:
+    if request.use_profile_matching:
+        return app_config.search_terms.include
+    seen: set[str] = set()
+    terms: list[str] = []
+    for query in request.queries:
+        for token in _tokens(query.query.lower().replace('"', "")):
+            if len(token) <= 2 or token in _QUERY_STOPWORDS or token in seen:
+                continue
+            seen.add(token)
+            terms.append(token)
+    return terms
+
+
 def _location_score(
     result: InstantJobSearchResult,
     searchable: str,
+    request: InstantJobSearchRequest,
     app_config: AppConfig,
 ) -> tuple[int, str | None]:
-    preferred_workplaces = set(
-        app_config.search_terms.workplace_types or app_config.profile.target_workplace_types
-    )
-    preferred_locations = app_config.search_terms.locations + app_config.profile.preferred_locations
+    if request.use_profile_matching:
+        preferred_workplaces = set(app_config.search_terms.workplace_types)
+        preferred_locations = list(app_config.search_terms.locations)
+        preferred_workplaces.update(app_config.profile.target_workplace_types)
+        preferred_locations.extend(app_config.profile.preferred_locations)
+    else:
+        preferred_workplaces = {
+            workplace
+            for query in request.queries
+            for workplace in query.workplace_types
+            if workplace != "unknown"
+        }
+        preferred_locations = [
+            query.location for query in request.queries if query.location
+        ]
     if result.workplace_type in preferred_workplaces and result.workplace_type != "unknown":
         return 14, f"{result.workplace_type} workplace"
     if result.workplace_type in {"remote", "hybrid"}:
@@ -180,11 +234,13 @@ def _is_aggregator_collection_result(
         return True
     title = result.title.lower()
     company = (result.company or "").lower()
-    if company in {"indeed", "linkedin", "ziprecruiter"} and _looks_like_collection_title(title):
+    if company in _AGGREGATOR_COMPANIES and _looks_like_collection_title(title):
+        return True
+    if _looks_like_collection_title(title) and not _is_known_structured_job_url(str(result.url)):
         return True
     return _looks_like_collection_title(title) and any(
         host in str(result.url).lower()
-        for host in ["indeed.com", "linkedin.com", "ziprecruiter.com", "glassdoor.com"]
+        for host in _AGGREGATOR_HOST_HINTS
     )
 
 
@@ -208,29 +264,43 @@ def _is_aggregator_collection_url(url: str) -> bool:
         return path.startswith("/jobs-search") or path.startswith("/jobs")
     if "glassdoor.com" in host:
         return "/job-listing" not in path and ("jobs" in path or "job-search" in path)
+    if "dice.com" in host:
+        return path.startswith("/jobs") and not path.startswith("/job-detail/")
+    if "builtin" in host:
+        return path.startswith("/jobs") or "/jobs/" in path
+    if "wellfound.com" in host:
+        return path.startswith("/jobs")
+    if "monster.com" in host:
+        return path.startswith("/jobs")
     return False
 
 
 def _is_actual_job_board_posting(url: str) -> bool:
     parsed = urlparse(url)
     host = parsed.netloc.lower().removeprefix("www.")
-    path = parsed.path.lower()
+    path = parsed.path.lower().rstrip("/")
+    segments = [segment for segment in path.split("/") if segment]
     query = parse_qs(parsed.query)
     if "linkedin.com" in host:
-        return path.startswith("/jobs/view/")
+        return _segment_after(segments, "view") is not None and segments[:2] == ["jobs", "view"]
     if "indeed.com" in host:
-        return path.startswith("/viewjob") or path.startswith("/rc/clk") or "jk" in query
+        return path == "/viewjob" or path == "/rc/clk" or bool(query.get("jk"))
     if "ziprecruiter.com" in host:
-        return path.startswith("/jobs/") and not path.startswith("/jobs-search")
+        return len(segments) >= 2 and segments[0] == "jobs" and _looks_like_posting_slug(segments[1])
     if "glassdoor.com" in host:
-        return "/job-listing/" in path
+        return "job-listing" in segments and _segment_after(segments, "job-listing") is not None
     return False
 
 
 def _looks_like_collection_title(title: str) -> bool:
     collection_phrases = [
+        "best ",
+        "best remote",
+        "best hybrid",
         "jobs in",
+        "job in",
         "remote jobs",
+        "hybrid jobs",
         "software engineer jobs",
         "engineering jobs",
         "apply today",
@@ -239,7 +309,55 @@ def _looks_like_collection_title(title: str) -> bool:
         "job search",
         "available jobs",
     ]
-    return any(phrase in title for phrase in collection_phrases)
+    if any(phrase in title for phrase in collection_phrases):
+        return True
+    return title.endswith(" jobs") or " jobs - " in title
+
+
+def _is_known_structured_job_url(url: str) -> bool:
+    lowered = url.lower()
+    return any(
+        host in lowered
+        for host in [
+            "greenhouse.io",
+            "lever.co",
+            "ashbyhq.com",
+            "workdayjobs.com",
+            "myworkdayjobs.com",
+        ]
+    ) or _is_actual_job_board_posting(url)
+
+
+def _is_strict_role_posting_url(url: str) -> bool:
+    parsed = urlparse(url)
+    host = parsed.netloc.lower().removeprefix("www.")
+    path = parsed.path.lower().rstrip("/")
+    segments = [segment for segment in path.split("/") if segment]
+    if _is_actual_job_board_posting(url):
+        return True
+    if "greenhouse.io" in host:
+        return _segment_after(segments, "jobs") is not None or bool(parse_qs(parsed.query).get("gh_jid"))
+    if "lever.co" in host:
+        return host == "jobs.lever.co" and len(segments) >= 2 and _looks_like_posting_slug(segments[-1])
+    if "ashbyhq.com" in host:
+        return host == "jobs.ashbyhq.com" and len(segments) >= 2 and _looks_like_posting_slug(segments[-1])
+    if "workdayjobs.com" in host or "myworkdayjobs.com" in host:
+        return _segment_after(segments, "job") is not None
+    return False
+
+
+def _segment_after(segments: list[str], marker: str) -> str | None:
+    try:
+        index = segments.index(marker)
+    except ValueError:
+        return None
+    if index + 1 >= len(segments):
+        return None
+    return segments[index + 1]
+
+
+def _looks_like_posting_slug(value: str) -> bool:
+    return any(character.isdigit() for character in value) or len(value) >= 20
 
 
 def _tokens(text: str) -> list[str]:

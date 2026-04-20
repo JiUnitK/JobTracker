@@ -39,10 +39,15 @@ def search_jobs(
         "--include-unknown-age",
         help="Include results whose posting age cannot be verified.",
     ),
-    include_low_fit: bool = typer.Option(
+    use_profile_matching: bool = typer.Option(
         False,
-        "--include-low-fit",
-        help="Include results that would otherwise be skipped for low fit.",
+        "--use-profile-matching",
+        help="Use config/profile.yaml preferences when scoring results.",
+    ),
+    source_mode: str = typer.Option(
+        "strict",
+        "--source-mode",
+        help="Result source mode: known individual posting URLs only, or broad web results.",
     ),
     json_output: bool = typer.Option(False, "--json", help="Output structured JSON."),
     markdown_output: Path | None = typer.Option(
@@ -64,7 +69,8 @@ def search_jobs(
                 location=location or None,
                 max_age_days=days,
                 include_unknown_age=True if include_unknown_age else None,
-                include_low_fit=include_low_fit,
+                use_profile_matching=use_profile_matching,
+                source_mode=_source_mode(source_mode),
                 limit=limit,
             ),
         )
@@ -80,3 +86,10 @@ def search_jobs(
         typer.echo(format_instant_job_search_json(summary))
         return
     typer.echo(format_instant_job_search_summary(summary))
+
+
+def _source_mode(value: str):
+    cleaned = value.strip().lower()
+    if cleaned not in {"strict", "broad"}:
+        raise typer.BadParameter("--source-mode must be strict or broad")
+    return cleaned

@@ -20,7 +20,8 @@ class FakeRunner:
             requested_queries=[InstantJobSearchQuery(query=overrides.query or "backend engineer")],
             max_age_days=overrides.max_age_days or 7,
             include_unknown_age=bool(overrides.include_unknown_age),
-            include_low_fit=bool(overrides.include_low_fit),
+            use_profile_matching=bool(overrides.use_profile_matching),
+            source_mode=overrides.source_mode or "strict",
             total_raw_results=1,
             results=[
                 InstantJobSearchResult(
@@ -66,7 +67,8 @@ def test_search_jobs_api_returns_structured_summary() -> None:
             "days": 7,
             "limit": 5,
             "include_unknown_age": True,
-            "include_low_fit": True,
+            "use_profile_matching": True,
+            "source_mode": "broad",
         },
     )
 
@@ -74,7 +76,8 @@ def test_search_jobs_api_returns_structured_summary() -> None:
     payload = response.json()
     assert payload["max_age_days"] == 7
     assert payload["include_unknown_age"] is True
-    assert payload["include_low_fit"] is True
+    assert payload["use_profile_matching"] is True
+    assert payload["source_mode"] == "broad"
     assert payload["results"][0]["title"] == "Backend Engineer"
     assert payload["results"][0]["reasons"] == ["strong title match", "recent posting"]
 
@@ -97,14 +100,22 @@ def test_static_frontend_and_assets_are_served() -> None:
 
     assert index.status_code == 200
     assert "JobTracker" in index.text
+    assert "sourceStatus" not in index.text
     assert 'id="searchForm"' in index.text
     assert "Role Link" in index.text
-    assert "Low fit" in index.text
+    assert "Strict roles" in index.text
+    assert "Broad web" in index.text
+    assert "Include listings of unknown age" in index.text
+    assert "Use personalized profile matching" in index.text
     assert script.status_code == 200
     assert "runSearch" in script.text
     assert "Open role" in script.text
     assert "url-preview" in script.text
-    assert "include_low_fit" in script.text
+    assert "use_profile_matching" in script.text
+    assert "source_mode" in script.text
+    assert "enabled_instant_search_sources" not in script.text
+    assert "markdownButton" not in script.text
+    assert "Markdown" not in index.text
     assert styles.status_code == 200
     assert ".results-wrap" in styles.text
     assert ".url-preview" in styles.text

@@ -30,7 +30,8 @@ def test_instant_job_search_request_cleans_query_and_location() -> None:
         ],
         max_age_days=14,
         include_unknown_age=True,
-        include_low_fit=True,
+        use_profile_matching=True,
+        source_mode="broad",
         limit=10,
     )
 
@@ -38,7 +39,8 @@ def test_instant_job_search_request_cleans_query_and_location() -> None:
     assert request.queries[0].location == "Remote"
     assert request.max_age_days == 14
     assert request.include_unknown_age is True
-    assert request.include_low_fit is True
+    assert request.use_profile_matching is True
+    assert request.source_mode == "broad"
     assert request.limit == 10
 
 
@@ -123,7 +125,8 @@ def test_instant_job_search_run_summary_is_json_ready() -> None:
         total_raw_results=3,
         skipped_for_age=1,
         skipped_for_relevance=1,
-        include_low_fit=True,
+        use_profile_matching=True,
+        source_mode="broad",
     )
 
     dumped = summary.model_dump(mode="json")
@@ -131,4 +134,5 @@ def test_instant_job_search_run_summary_is_json_ready() -> None:
     assert dumped["requested_queries"][0]["query"] == "customer success"
     assert dumped["results"][0]["title"] == "Customer Success Specialist"
     assert dumped["total_raw_results"] == 3
-    assert dumped["include_low_fit"] is True
+    assert dumped["use_profile_matching"] is True
+    assert dumped["source_mode"] == "broad"

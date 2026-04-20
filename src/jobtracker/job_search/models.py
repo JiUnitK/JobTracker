@@ -10,6 +10,7 @@ from jobtracker.models import WorkplaceType
 
 AgeConfidence = Literal["high", "medium", "low", "unknown"]
 SearchProvider = Literal["brave_search", "other"]
+SourceMode = Literal["strict", "broad"]
 
 
 class InstantJobSearchQuery(BaseModel):
@@ -38,7 +39,8 @@ class InstantJobSearchRequest(BaseModel):
     queries: list[InstantJobSearchQuery] = Field(default_factory=list)
     max_age_days: int = 7
     include_unknown_age: bool = False
-    include_low_fit: bool = False
+    use_profile_matching: bool = False
+    source_mode: SourceMode = "strict"
     limit: int = 25
 
     @model_validator(mode="after")
@@ -125,7 +127,8 @@ class InstantJobSearchRunSummary(BaseModel):
     results: list[InstantJobSearchResult] = Field(default_factory=list)
     max_age_days: int = 7
     include_unknown_age: bool = False
-    include_low_fit: bool = False
+    use_profile_matching: bool = False
+    source_mode: SourceMode = "strict"
     total_raw_results: int = 0
     skipped_for_age: int = 0
     skipped_for_relevance: int = 0

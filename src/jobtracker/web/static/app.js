@@ -3,20 +3,18 @@ const queryInput = document.querySelector("#queryInput");
 const locationInput = document.querySelector("#locationInput");
 const daysInput = document.querySelector("#daysInput");
 const limitInput = document.querySelector("#limitInput");
+const sourceModeInput = document.querySelector("#sourceModeInput");
 const unknownInput = document.querySelector("#unknownInput");
-const lowFitInput = document.querySelector("#lowFitInput");
-const sourceStatus = document.querySelector("#sourceStatus");
+const profileMatchingInput = document.querySelector("#profileMatchingInput");
 const resultCount = document.querySelector("#resultCount");
 const maxAge = document.querySelector("#maxAge");
 const skippedAge = document.querySelector("#skippedAge");
 const skippedFit = document.querySelector("#skippedFit");
-const fitMode = document.querySelector("#fitMode");
+const profileMode = document.querySelector("#profileMode");
+const sourceMode = document.querySelector("#sourceMode");
 const statusMessage = document.querySelector("#statusMessage");
 const resultsBody = document.querySelector("#resultsBody");
 const searchButton = document.querySelector("#searchButton");
-const markdownButton = document.querySelector("#markdownButton");
-
-let currentSummary = null;
 
 function setStatus(message, isError = false) {
   statusMessage.textContent = message;
@@ -44,8 +42,8 @@ function renderSummary(summary) {
   maxAge.textContent = `${summary.max_age_days}d`;
   skippedAge.textContent = String(summary.skipped_for_age);
   skippedFit.textContent = String(summary.skipped_for_relevance);
-  fitMode.textContent = summary.include_low_fit ? "disabled" : "strict";
-  markdownButton.disabled = summary.results.length === 0;
+  profileMode.textContent = summary.use_profile_matching ? "profile on" : "profile off";
+  sourceMode.textContent = summary.source_mode || "strict";
 }
 
 function renderResults(summary) {
@@ -86,8 +84,9 @@ function requestBody() {
     location: locationInput.value.trim() || null,
     days: daysInput.value ? Number(daysInput.value) : null,
     limit: limitInput.value ? Number(limitInput.value) : 25,
+    source_mode: sourceModeInput.value,
     include_unknown_age: unknownInput.checked,
-    include_low_fit: lowFitInput.checked,
+    use_profile_matching: profileMatchingInput.checked,
   };
 }
 
@@ -99,9 +98,9 @@ async function loadConfig() {
   locationInput.value = config.default_location || "";
   daysInput.value = config.max_age_days;
   limitInput.value = config.default_limit || 25;
+  sourceModeInput.value = config.source_mode || "strict";
   unknownInput.checked = Boolean(config.include_unknown_age);
-  lowFitInput.checked = Boolean(config.include_low_fit);
-  sourceStatus.textContent = (config.enabled_instant_search_sources || []).join(", ") || "No enabled sources";
+  profileMatchingInput.checked = Boolean(config.use_profile_matching);
 }
 
 async function runSearch(event) {
@@ -118,7 +117,6 @@ async function runSearch(event) {
     if (!response.ok) {
       throw new Error(payload.detail || "Search failed.");
     }
-    currentSummary = payload;
     renderSummary(payload);
     renderResults(payload);
     setStatus(payload.results.length ? "Search complete." : "No matching jobs found.");
@@ -129,32 +127,6 @@ async function runSearch(event) {
   }
 }
 
-function toMarkdown(summary) {
-  const lines = [
-    "# Instant Job Search",
-    "",
-    `Max age: ${summary.max_age_days} days`,
-    `Results: ${summary.results.length}`,
-    "",
-    "| Rank | Title | Company | Location | Age | Score | Why | URL |",
-    "| --- | --- | --- | --- | --- | ---: | --- | --- |",
-  ];
-  summary.results.forEach((result, index) => {
-    const clean = (value) => String(value ?? "").replaceAll("|", "\\|").replaceAll("\n", " ");
-    lines.push(
-      `| ${index + 1} | ${clean(result.title)} | ${clean(result.company || "Unknown company")} | ${clean(result.location || result.workplace_type || "-")} | ${clean(ageText(result))} | ${result.score} | ${clean((result.reasons || []).join(", ") || "-")} | ${result.url} |`
-    );
-  });
-  return `${lines.join("\n")}\n`;
-}
-
-async function copyMarkdown() {
-  if (!currentSummary) return;
-  await navigator.clipboard.writeText(toMarkdown(currentSummary));
-  setStatus("Markdown copied.");
-}
-
 form.addEventListener("submit", runSearch);
-markdownButton.addEventListener("click", copyMarkdown);
 
 loadConfig().catch((error) => setStatus(error.message, true));

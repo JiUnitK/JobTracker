@@ -23,7 +23,8 @@ class FakeRunner:
             requested_queries=[InstantJobSearchQuery(query="customer success", location="Remote")],
             max_age_days=overrides.max_age_days or 7,
             include_unknown_age=bool(overrides.include_unknown_age),
-            include_low_fit=bool(overrides.include_low_fit),
+            use_profile_matching=bool(overrides.use_profile_matching),
+            source_mode=overrides.source_mode or "strict",
             results=[
                 InstantJobSearchResult(
                     title="Customer Success Specialist",
@@ -64,13 +65,22 @@ def test_search_jobs_command_outputs_json(monkeypatch) -> None:
     assert '"Customer Success Specialist"' in result.stdout
 
 
-def test_search_jobs_command_passes_include_low_fit(monkeypatch) -> None:
+def test_search_jobs_command_passes_profile_matching(monkeypatch) -> None:
     monkeypatch.setattr(cli_job_search, "InstantJobSearchRunner", lambda: FakeRunner())
 
-    result = runner.invoke(app, ["search", "jobs", "--include-low-fit", "--json"])
+    result = runner.invoke(app, ["search", "jobs", "--use-profile-matching", "--json"])
 
     assert result.exit_code == 0
-    assert '"include_low_fit": true' in result.stdout
+    assert '"use_profile_matching": true' in result.stdout
+
+
+def test_search_jobs_command_passes_source_mode(monkeypatch) -> None:
+    monkeypatch.setattr(cli_job_search, "InstantJobSearchRunner", lambda: FakeRunner())
+
+    result = runner.invoke(app, ["search", "jobs", "--source-mode", "broad", "--json"])
+
+    assert result.exit_code == 0
+    assert '"source_mode": "broad"' in result.stdout
 
 
 def test_search_jobs_command_writes_markdown(monkeypatch) -> None:

@@ -444,11 +444,11 @@ Initial backend routes:
 
 Initial frontend:
 
-- Query, location, max-age, limit, and include-unknown-age controls
+- Query, location, source-mode, max-age, limit, include-unknown-age, and profile-matching controls
 - Ranked results table
 - Score and concise reason display
 - Loading, empty, and error states
-- Link opening and Markdown export affordances
+- Link opening affordances
 
 ## Broad Data Flow
 

@@ -2,13 +2,16 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
+from jobtracker.job_search.models import SourceMode
+
 
 class WebConfigSummary(BaseModel):
     default_query: str | None = None
     default_location: str | None = None
     max_age_days: int = 7
     include_unknown_age: bool = False
-    include_low_fit: bool = False
+    use_profile_matching: bool = False
+    source_mode: SourceMode = "strict"
     default_limit: int = 25
     enabled_instant_search_sources: list[str] = Field(default_factory=list)
 
@@ -19,4 +22,5 @@ class InstantJobSearchApiRequest(BaseModel):
     days: int | None = Field(default=None, ge=1, le=90)
     limit: int = Field(default=25, ge=1, le=100)
     include_unknown_age: bool = False
-    include_low_fit: bool = False
+    use_profile_matching: bool = False
+    source_mode: SourceMode = "strict"

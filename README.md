@@ -90,13 +90,13 @@ Instant job search is the fastest front door when you want current postings with
 python -m jobtracker search jobs
 python -m jobtracker search jobs --days 7 --query "customer success" --location Remote --limit 25
 python -m jobtracker search jobs --include-unknown-age
-python -m jobtracker search jobs --include-low-fit
+python -m jobtracker search jobs --use-profile-matching
 python -m jobtracker search jobs --json
 python -m jobtracker search jobs --markdown-output reports/instant-jobs.md
 python -m jobtracker web
 ```
 
-This workflow uses [config/search_terms.yaml](/abs/path/F:/Projects/JobTracker/config/search_terms.yaml), [config/sources.yaml](/abs/path/F:/Projects/JobTracker/config/sources.yaml), and [config/profile.yaml](/abs/path/F:/Projects/JobTracker/config/profile.yaml). It returns structured results and does not write to the database by default.
+This workflow uses [config/search_terms.yaml](/abs/path/F:/Projects/JobTracker/config/search_terms.yaml) and [config/sources.yaml](/abs/path/F:/Projects/JobTracker/config/sources.yaml). Personalized scoring from [config/profile.yaml](/abs/path/F:/Projects/JobTracker/config/profile.yaml) is opt-in with `--use-profile-matching` or the GUI profile-matching toggle. It returns structured results and does not write to the database by default.
 
 The local browser UI serves the same workflow at [http://127.0.0.1:8765](http://127.0.0.1:8765):
 
@@ -244,7 +244,9 @@ Instant search planning supports:
 
 Freshness filtering is intentionally conservative. Results with explicit posting dates or relative age text are classified with `high`, `medium`, or `low` confidence. Results with no usable age signal are excluded by default and can be included with `--include-unknown-age`.
 
-Instant search scoring ranks title, keyword, skill, location, workplace, seniority, freshness, source, and job-page signals. By default, low-fit results are skipped and counted under `Skipped fit`; use `--include-low-fit` or the GUI `Low fit` toggle to include them. The CLI shows concise `Why:` reasons, and `--markdown-output` writes the same structured result set as a review table.
+Instant search uses strict role-page filtering by default. Strict mode only allows known individual-posting URL structures, such as Greenhouse, Lever, Ashby, Workday, LinkedIn `/jobs/view`, Indeed `viewjob`, and Glassdoor `job-listing` pages. Search-result aggregate pages from boards like Built In, Dice, iHire, Indeed, and LinkedIn are not surfaced as roles. Use `--source-mode broad` or the GUI `Broad web` mode when you intentionally want broader web results.
+
+Instant search scoring ranks title, query keyword, location, workplace, seniority, freshness, source, and job-page signals after source filtering. Low-scoring results are always skipped and counted under `Skipped score`. Turn on `--use-profile-matching` or the GUI `Use personalized profile matching` toggle to add profile-specific skill boosts, preferred locations/workplaces, and profile exclusions from `config/profile.yaml`. The CLI shows concise `Why:` reasons, and `--markdown-output` writes the same structured result set as a review table.
 
 Profile tuning lives in [config/profile.yaml](/abs/path/F:/Projects/JobTracker/config/profile.yaml).
 
@@ -252,6 +254,8 @@ Profile tuning lives in [config/profile.yaml](/abs/path/F:/Projects/JobTracker/c
 
 ```powershell
 python -m jobtracker search jobs
+python -m jobtracker search jobs --source-mode broad
+python -m jobtracker search jobs --use-profile-matching
 python -m jobtracker search jobs --markdown-output reports/instant-jobs.md
 python -m jobtracker web
 python -m jobtracker discover companies run
