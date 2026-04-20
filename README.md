@@ -68,7 +68,7 @@ If you want Google Jobs search discovery too, create a repo-root `.env` file:
 SERPAPI_KEY=your_key_here
 ```
 
-If you do not want to use SerpAPI yet, set `company_search.enabled: false` in [config/company_discovery.yaml](/abs/path/F:/Projects/JobTracker/config/company_discovery.yaml).
+If you do not want to use SerpAPI yet, set `company_search.enabled: false` under `discovery_sources` in [config/sources.yaml](/abs/path/F:/Projects/JobTracker/config/sources.yaml).
 
 ### 3. Validate config and create the database
 
@@ -198,11 +198,13 @@ Tracked ATS source identifiers in [config/sources.yaml](/abs/path/F:/Projects/Jo
 - `lever.params.account_names`: Lever account names used in `https://api.lever.co/v0/postings/{account}`
 - `ashby.params.job_board_names`: Ashby job board names used in `https://api.ashbyhq.com/posting-api/job-board/{name}`
 
-Discovery sources in [config/company_discovery.yaml](/abs/path/F:/Projects/JobTracker/config/company_discovery.yaml):
+Discovery sources live under `discovery_sources` in [config/sources.yaml](/abs/path/F:/Projects/JobTracker/config/sources.yaml):
 
 - `company_search`: SerpAPI Google Jobs through `query_url_template`, using `SERPAPI_KEY`
 - `remote_ok`: RemoteOK public API at `https://remoteok.com/api`
 - `hn_whos_hiring`: HN Algolia API, auto-detecting the current monthly thread
+
+Discovery queries live under `discovery_queries` in [config/search_terms.yaml](/abs/path/F:/Projects/JobTracker/config/search_terms.yaml). Discovered-company scoring lives under `company_discovery` in [config/scoring.yaml](/abs/path/F:/Projects/JobTracker/config/scoring.yaml).
 
 Profile tuning lives in [config/profile.yaml](/abs/path/F:/Projects/JobTracker/config/profile.yaml).
 

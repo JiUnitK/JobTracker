@@ -29,3 +29,31 @@ sources:
     enabled: false
     reliability_tier: tier2
     base_url: https://www.linkedin.com/jobs/
+discovery_sources:
+  # SerpAPI Google Jobs - requires SERPAPI_KEY in .env.
+  - name: company_search
+    type: search
+    enabled: true
+    params:
+      results: []
+      results_urls: []
+      query_url_template: "https://serpapi.com/search.json?engine=google_jobs&q={query}&location={location}&api_key=$SERPAPI_KEY"
+      results_payload_key: jobs_results
+      field_map:
+        title: job_title
+        location: location_text
+
+  # RemoteOK public feed - no API key required. Fetches all remote tech jobs and
+  # filters client-side by configured keywords. All entries are workplace_type=remote.
+  - name: remote_ok
+    type: aggregator
+    enabled: true
+    params:
+      feed_url: "https://remoteok.com/api"
+
+  # Hacker News "Who is hiring?" monthly thread - no API key required. Auto-detects
+  # the current month's thread via HN Algolia. Pin a specific thread with story_id.
+  - name: hn_whos_hiring
+    type: aggregator
+    enabled: true
+    params: {}

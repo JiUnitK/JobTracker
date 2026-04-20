@@ -12,31 +12,6 @@ WorkplaceType = Literal["remote", "hybrid", "onsite"]
 ReliabilityTier = Literal["tier1", "tier2", "tier3"]
 
 
-class SearchTermsConfig(BaseModel):
-    include: list[str] = Field(default_factory=list)
-    exclude: list[str] = Field(default_factory=list)
-    locations: list[str] = Field(default_factory=list)
-    workplace_types: list[WorkplaceType] = Field(default_factory=list)
-    seniority: list[str] = Field(default_factory=list)
-
-
-class SourceDefinition(BaseModel):
-    name: str
-    type: SourceType
-    enabled: bool = True
-    reliability_tier: ReliabilityTier
-    base_url: HttpUrl | None = None
-    params: dict[str, Any] = Field(default_factory=dict)
-
-
-class SourcesConfig(BaseModel):
-    defaults: dict[str, int | float | str | bool] = Field(default_factory=dict)
-    sources: list[SourceDefinition] = Field(default_factory=list)
-
-    def enabled_sources(self) -> list[SourceDefinition]:
-        return [source for source in self.sources if source.enabled]
-
-
 class CompanyDiscoveryQueryConfig(BaseModel):
     keywords: list[str] = Field(default_factory=list)
     locations: list[str] = Field(default_factory=list)
@@ -52,6 +27,24 @@ class CompanyDiscoveryQueryConfig(BaseModel):
         return self
 
 
+class SearchTermsConfig(BaseModel):
+    include: list[str] = Field(default_factory=list)
+    exclude: list[str] = Field(default_factory=list)
+    locations: list[str] = Field(default_factory=list)
+    workplace_types: list[WorkplaceType] = Field(default_factory=list)
+    seniority: list[str] = Field(default_factory=list)
+    discovery_queries: list[CompanyDiscoveryQueryConfig] = Field(default_factory=list)
+
+
+class SourceDefinition(BaseModel):
+    name: str
+    type: SourceType
+    enabled: bool = True
+    reliability_tier: ReliabilityTier
+    base_url: HttpUrl | None = None
+    params: dict[str, Any] = Field(default_factory=dict)
+
+
 class CompanyDiscoverySourceDefinition(BaseModel):
     name: str
     type: DiscoverySourceType
@@ -60,47 +53,51 @@ class CompanyDiscoverySourceDefinition(BaseModel):
     params: dict[str, Any] = Field(default_factory=dict)
 
 
-class CompanyDiscoveryConfig(BaseModel):
-    class ScoringWeights(BaseModel):
-        title_match: float = 0.4
-        skill_match: float = 0.25
-        location_match: float = 0.35
-        repeated_appearance: float = 0.35
-        ats_confidence: float = 0.35
-        fresh_evidence: float = 0.3
-
-    class ScoringConfig(BaseModel):
-        fit_weights: "CompanyDiscoveryConfig.ScoringWeights" = Field(
-            default_factory=lambda: CompanyDiscoveryConfig.ScoringWeights(
-                title_match=0.4,
-                skill_match=0.25,
-                location_match=0.35,
-                repeated_appearance=0.0,
-                ats_confidence=0.0,
-                fresh_evidence=0.0,
-            )
-        )
-        hiring_weights: "CompanyDiscoveryConfig.ScoringWeights" = Field(
-            default_factory=lambda: CompanyDiscoveryConfig.ScoringWeights(
-                title_match=0.0,
-                skill_match=0.0,
-                location_match=0.0,
-                repeated_appearance=0.35,
-                ats_confidence=0.35,
-                fresh_evidence=0.3,
-            )
-        )
-        priority_mix: dict[str, float] = Field(
-            default_factory=lambda: {"fit_score": 0.5, "hiring_score": 0.5}
-        )
-
+class SourcesConfig(BaseModel):
     defaults: dict[str, int | float | str | bool] = Field(default_factory=dict)
-    queries: list[CompanyDiscoveryQueryConfig] = Field(default_factory=list)
-    sources: list[CompanyDiscoverySourceDefinition] = Field(default_factory=list)
-    scoring: ScoringConfig = Field(default_factory=ScoringConfig)
+    sources: list[SourceDefinition] = Field(default_factory=list)
+    discovery_sources: list[CompanyDiscoverySourceDefinition] = Field(default_factory=list)
 
-    def enabled_sources(self) -> list[CompanyDiscoverySourceDefinition]:
+    def enabled_sources(self) -> list[SourceDefinition]:
         return [source for source in self.sources if source.enabled]
+
+    def enabled_discovery_sources(self) -> list[CompanyDiscoverySourceDefinition]:
+        return [source for source in self.discovery_sources if source.enabled]
+
+
+class CompanyDiscoveryScoringWeights(BaseModel):
+    title_match: float = 0.4
+    skill_match: float = 0.25
+    location_match: float = 0.35
+    repeated_appearance: float = 0.35
+    ats_confidence: float = 0.35
+    fresh_evidence: float = 0.3
+
+
+class CompanyDiscoveryScoringConfig(BaseModel):
+    fit_weights: CompanyDiscoveryScoringWeights = Field(
+        default_factory=lambda: CompanyDiscoveryScoringWeights(
+            title_match=0.4,
+            skill_match=0.25,
+            location_match=0.35,
+            repeated_appearance=0.0,
+            ats_confidence=0.0,
+            fresh_evidence=0.0,
+        )
+    )
+    hiring_weights: CompanyDiscoveryScoringWeights = Field(
+        default_factory=lambda: CompanyDiscoveryScoringWeights(
+            title_match=0.0,
+            skill_match=0.0,
+            location_match=0.0,
+            repeated_appearance=0.35,
+            ats_confidence=0.35,
+            fresh_evidence=0.3,
+        )
+    )
+    priority_mix: dict[str, float] = Field(
+        default_factory=lambda: {"fit_score": 0.5, "hiring_score": 0.5}
+    )
 
 
 class ScoringWeights(BaseModel):
@@ -118,6 +115,18 @@ class ScoringConfig(BaseModel):
     fit_weights: ScoringWeights
     hiring_weights: ScoringWeights
     priority_mix: dict[str, float] = Field(default_factory=dict)
+    company_discovery: CompanyDiscoveryScoringConfig = Field(
+        default_factory=CompanyDiscoveryScoringConfig
+    )
+
+
+class CompanyDiscoveryConfig(BaseModel):
+    queries: list[CompanyDiscoveryQueryConfig] = Field(default_factory=list)
+    sources: list[CompanyDiscoverySourceDefinition] = Field(default_factory=list)
+    scoring: CompanyDiscoveryScoringConfig = Field(default_factory=CompanyDiscoveryScoringConfig)
+
+    def enabled_sources(self) -> list[CompanyDiscoverySourceDefinition]:
+        return [source for source in self.sources if source.enabled]
 
 
 class ProfileConfig(BaseModel):

@@ -418,23 +418,13 @@ Useful outputs:
 
 ## Configuration Shape
 
-Company discovery likely needs its own config file rather than overloading `sources.yaml`.
+Company discovery config is split across the same domain files as the rest of the app:
 
-Suggested config:
+- discovery queries live in `config/search_terms.yaml`
+- discovery sources live under `discovery_sources` in `config/sources.yaml`
+- discovered-company scoring lives under `company_discovery` in `config/scoring.yaml`
 
-- `config/company_discovery.yaml`
-
-Possible sections:
-
-- enabled adapters
-- discovery search terms
-- location and workplace filters
-- source-specific fetch and parsing behavior
-- resolution behavior
-- discovery scoring weights
-- promotion defaults
-
-`sources.yaml` should remain focused on durable tracked job sources.
+The loader assembles those sections into an internal company discovery config for the runner.
 
 ## Relationship to Existing Architecture
 

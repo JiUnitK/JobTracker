@@ -39,7 +39,7 @@ The daily workflow should be short, roughly 5-15 minutes.
 python -m jobtracker discover companies run
 ```
 
-Discovery can pull from RemoteOK, HN Who's Hiring, and SerpAPI Google Jobs depending on what is enabled in [config/company_discovery.yaml](/abs/path/F:/Projects/JobTracker/config/company_discovery.yaml).
+Discovery can pull from RemoteOK, HN Who's Hiring, and SerpAPI Google Jobs depending on what is enabled under `discovery_sources` in [config/sources.yaml](/abs/path/F:/Projects/JobTracker/config/sources.yaml).
 
 ### 2. Improve unresolved companies when needed
 

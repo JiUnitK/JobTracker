@@ -41,12 +41,6 @@ def load_yaml_file(path: Path) -> dict[str, Any]:
     return data
 
 
-def load_optional_yaml_file(path: Path) -> dict[str, Any]:
-    if not path.exists():
-        return {}
-    return load_yaml_file(path)
-
-
 def load_app_config(config_dir: Path) -> AppConfig:
     """Load and validate all config files from a directory."""
     _load_dotenv(config_dir.parent / ".env")
@@ -54,10 +48,12 @@ def load_app_config(config_dir: Path) -> AppConfig:
         load_yaml_file(config_dir / "search_terms.yaml")
     )
     sources = SourcesConfig.model_validate(load_yaml_file(config_dir / "sources.yaml"))
-    company_discovery = CompanyDiscoveryConfig.model_validate(
-        load_optional_yaml_file(config_dir / "company_discovery.yaml")
-    )
     scoring = ScoringConfig.model_validate(load_yaml_file(config_dir / "scoring.yaml"))
+    company_discovery = CompanyDiscoveryConfig(
+        queries=search_terms.discovery_queries,
+        sources=sources.discovery_sources,
+        scoring=scoring.company_discovery,
+    )
     profile = ProfileConfig.model_validate(load_yaml_file(config_dir / "profile.yaml"))
     return AppConfig(
         search_terms=search_terms,

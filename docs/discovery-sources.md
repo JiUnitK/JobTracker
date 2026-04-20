@@ -2,6 +2,12 @@
 
 Company discovery is the entry point for JobTracker. The default config uses live automated sources so discovery results are tied to current hiring signals rather than hand-maintained company lists.
 
+Discovery configuration is split across the main config files:
+
+- discovery sources live under `discovery_sources` in `config/sources.yaml`
+- discovery queries live under `discovery_queries` in `config/search_terms.yaml`
+- discovered-company scoring lives under `company_discovery` in `config/scoring.yaml`
+
 ## Default Sources
 
 ### `company_search`
@@ -22,7 +28,7 @@ Example `.env`:
 SERPAPI_KEY=your_key_here
 ```
 
-If you do not want to use SerpAPI yet, set `enabled: false` for `company_search`.
+If you do not want to use SerpAPI yet, set `enabled: false` for `company_search` in `config/sources.yaml`.
 
 ### `remote_ok`
 

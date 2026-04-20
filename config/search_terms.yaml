@@ -18,3 +18,13 @@ workplace_types:
 seniority:
   - mid
   - senior
+discovery_queries:
+  - keywords:
+      - software engineer
+      - backend engineer
+    locations:
+      - Austin, TX
+      - Remote
+    workplace_types:
+      - remote
+      - hybrid
