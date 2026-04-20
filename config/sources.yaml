@@ -57,3 +57,15 @@ discovery_sources:
     type: aggregator
     enabled: true
     params: {}
+instant_search_sources:
+  # Brave Search web API - requires BRAVE_SEARCH_API_KEY in .env.
+  - name: brave_search
+    type: search
+    enabled: true
+    base_url: https://api.search.brave.com/res/v1/web/search
+    api_key_env: BRAVE_SEARCH_API_KEY
+    params:
+      count: 20
+      country: US
+      search_lang: en
+      safesearch: moderate

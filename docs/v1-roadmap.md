@@ -230,7 +230,7 @@ Before a roadmap item is considered done:
 
 ## Immediate Next Steps
 
-0. Complete the cleanup pass in [refactor-checkpoint.md](refactor-checkpoint.md) so workflow boundaries are clear before adding a third workflow.
+0. Preserve the cleaned workflow boundaries in [package-boundaries.md](package-boundaries.md) while adding the third workflow.
 1. Add instant job-search config sections to `search_terms.yaml`, `sources.yaml`, and possibly `scoring.yaml`.
 2. Create the `job_search` package and typed result models.
 3. Implement the Brave Search adapter with fixtures and API-key validation.

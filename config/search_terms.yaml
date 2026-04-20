@@ -18,6 +18,15 @@ workplace_types:
 seniority:
   - mid
   - senior
+instant_job_search:
+  max_age_days: 7
+  include_unknown_age: false
+  query_templates:
+    - '"{query}" "{location}" job apply posted'
+    - '"{query}" "{location}" careers recently posted'
+    - 'site:greenhouse.io "{query}" "{location}"'
+    - 'site:jobs.lever.co "{query}" "{location}"'
+    - 'site:jobs.ashbyhq.com "{query}" "{location}"'
 discovery_queries:
   - keywords:
       - software engineer

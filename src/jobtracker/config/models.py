@@ -10,6 +10,21 @@ from jobtracker.models.domain import DiscoverySourceType, SourceType
 
 WorkplaceType = Literal["remote", "hybrid", "onsite"]
 ReliabilityTier = Literal["tier1", "tier2", "tier3"]
+InstantSearchSourceType = Literal["search"]
+
+
+class InstantJobSearchConfig(BaseModel):
+    max_age_days: int = 7
+    include_unknown_age: bool = False
+    query_templates: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_search_settings(self) -> "InstantJobSearchConfig":
+        if self.max_age_days < 1:
+            raise ValueError("instant_job_search.max_age_days must be at least 1")
+        cleaned_templates = [item.strip() for item in self.query_templates if item.strip()]
+        self.query_templates = cleaned_templates
+        return self
 
 
 class CompanyDiscoveryQueryConfig(BaseModel):
@@ -33,6 +48,9 @@ class SearchTermsConfig(BaseModel):
     locations: list[str] = Field(default_factory=list)
     workplace_types: list[WorkplaceType] = Field(default_factory=list)
     seniority: list[str] = Field(default_factory=list)
+    instant_job_search: InstantJobSearchConfig = Field(
+        default_factory=InstantJobSearchConfig
+    )
     discovery_queries: list[CompanyDiscoveryQueryConfig] = Field(default_factory=list)
 
 
@@ -53,16 +71,29 @@ class CompanyDiscoverySourceDefinition(BaseModel):
     params: dict[str, Any] = Field(default_factory=dict)
 
 
+class InstantSearchSourceDefinition(BaseModel):
+    name: str
+    type: InstantSearchSourceType
+    enabled: bool = True
+    base_url: HttpUrl | None = None
+    api_key_env: str = "BRAVE_SEARCH_API_KEY"
+    params: dict[str, Any] = Field(default_factory=dict)
+
+
 class SourcesConfig(BaseModel):
     defaults: dict[str, int | float | str | bool] = Field(default_factory=dict)
     sources: list[SourceDefinition] = Field(default_factory=list)
     discovery_sources: list[CompanyDiscoverySourceDefinition] = Field(default_factory=list)
+    instant_search_sources: list[InstantSearchSourceDefinition] = Field(default_factory=list)
 
     def enabled_sources(self) -> list[SourceDefinition]:
         return [source for source in self.sources if source.enabled]
 
     def enabled_discovery_sources(self) -> list[CompanyDiscoverySourceDefinition]:
         return [source for source in self.discovery_sources if source.enabled]
+
+    def enabled_instant_search_sources(self) -> list[InstantSearchSourceDefinition]:
+        return [source for source in self.instant_search_sources if source.enabled]
 
 
 class CompanyDiscoveryScoringWeights(BaseModel):
@@ -129,6 +160,14 @@ class CompanyDiscoveryConfig(BaseModel):
         return [source for source in self.sources if source.enabled]
 
 
+class JobSearchConfig(BaseModel):
+    settings: InstantJobSearchConfig = Field(default_factory=InstantJobSearchConfig)
+    sources: list[InstantSearchSourceDefinition] = Field(default_factory=list)
+
+    def enabled_sources(self) -> list[InstantSearchSourceDefinition]:
+        return [source for source in self.sources if source.enabled]
+
+
 class ProfileConfig(BaseModel):
     target_titles: list[str] = Field(default_factory=list)
     preferred_skills: list[str] = Field(default_factory=list)
@@ -142,6 +181,7 @@ class AppConfig(BaseModel):
     search_terms: SearchTermsConfig
     sources: SourcesConfig
     company_discovery: CompanyDiscoveryConfig
+    job_search: JobSearchConfig
     scoring: ScoringConfig
     profile: ProfileConfig
 
@@ -150,9 +190,13 @@ class AppConfig(BaseModel):
         enabled_discovery_sources = sum(
             1 for source in self.company_discovery.sources if source.enabled
         )
+        enabled_instant_search_sources = sum(
+            1 for source in self.job_search.sources if source.enabled
+        )
         return (
             f"{enabled_sources} enabled sources, "
             f"{enabled_discovery_sources} enabled discovery sources, "
+            f"{enabled_instant_search_sources} enabled instant search sources, "
             f"{len(self.search_terms.include)} search terms, "
             f"{len(self.profile.target_titles)} target titles"
         )

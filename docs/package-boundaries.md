@@ -34,7 +34,7 @@ surfaces. It should not become the home for instant search results.
 
 ### `jobtracker.job_search`
 
-Planned package for instant job search:
+Owns the instant job-search workflow:
 
 - Brave Search adapter
 - instant-search query planning
@@ -42,8 +42,8 @@ Planned package for instant job search:
 - relevance scoring for web search results
 - structured result models for CLI and future GUI usage
 
-This package should start side-effect-light and avoid default database writes in
-v1.
+This package starts side-effect-light and should avoid default database writes in
+v1. Its typed request and result models live in `jobtracker.job_search.models`.
 
 ## Shared Packages
 
@@ -72,3 +72,7 @@ instead.
 
 The shims should remain behavior-preserving until callers are migrated or a
 deliberate removal decision is made.
+
+First-party code should not import through these shim paths. The compatibility
+contract is covered by `tests/test_import_boundaries.py`, and the no-new-legacy
+import rule is covered by `tests/test_legacy_imports.py`.

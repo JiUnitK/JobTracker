@@ -9,6 +9,7 @@ import yaml
 from jobtracker.config.models import (
     AppConfig,
     CompanyDiscoveryConfig,
+    JobSearchConfig,
     ProfileConfig,
     ScoringConfig,
     SearchTermsConfig,
@@ -54,11 +55,16 @@ def load_app_config(config_dir: Path) -> AppConfig:
         sources=sources.discovery_sources,
         scoring=scoring.company_discovery,
     )
+    job_search = JobSearchConfig(
+        settings=search_terms.instant_job_search,
+        sources=sources.instant_search_sources,
+    )
     profile = ProfileConfig.model_validate(load_yaml_file(config_dir / "profile.yaml"))
     return AppConfig(
         search_terms=search_terms,
         sources=sources,
         company_discovery=company_discovery,
+        job_search=job_search,
         scoring=scoring,
         profile=profile,
     )
