@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from typing import Any, Callable
+from urllib.request import Request, urlopen
 
 from jobtracker.company_discovery.base import CompanyDiscoveryAdapter
 from jobtracker.company_discovery.common import (
@@ -24,6 +25,7 @@ class CompanySearchDiscoveryAdapter(CompanyDiscoveryAdapter):
 
     def __init__(self, fetch_json: FetchJson | None = None) -> None:
         self.fetch_json = fetch_json or fetch_json_default
+        self._uses_injected_fetch = fetch_json is not None
 
     def discover(
         self,
@@ -106,10 +108,8 @@ class CompanySearchDiscoveryAdapter(CompanyDiscoveryAdapter):
         )
         loaded: list[dict[str, Any]] = []
         for url in urls:
-            payload = self.fetch_json(url)
-            items: Any = payload
-            if isinstance(payload, dict):
-                items = payload.get(payload_key)
+            payload = self._fetch_payload(source, url)
+            items: Any = _payload_items(payload, payload_key)
             if not isinstance(items, list):
                 raise ValueError(
                     f"company discovery payload from {url} must be a list or mapping with '{payload_key}'"
@@ -133,5 +133,102 @@ class CompanySearchDiscoveryAdapter(CompanyDiscoveryAdapter):
                 loaded.append(merged)
         return loaded
 
+    def _fetch_payload(
+        self,
+        source: CompanyDiscoverySourceDefinition,
+        url: str,
+    ) -> Any:
+        if self._uses_injected_fetch:
+            return self.fetch_json(url)
+        return fetch_json_for_source(url, source)
+
+
+def _payload_items(payload: Any, payload_key: str) -> Any:
+    if not isinstance(payload, dict):
+        return payload
+    items = payload.get(payload_key)
+    if payload_key == "web.results" and items is None:
+        web = payload.get("web")
+        if isinstance(web, dict):
+            return _normalize_brave_web_results(web.get("results", []))
+    return items
+
+
+def _normalize_brave_web_results(items: Any) -> list[dict[str, Any]]:
+    if not isinstance(items, list):
+        return []
+    normalized: list[dict[str, Any]] = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        title = str(item.get("title", "") or "").strip()
+        url = str(item.get("url", "") or "").strip()
+        if not title or not url:
+            continue
+        profile = item.get("profile", {})
+        profile_name = profile.get("long_name", "") if isinstance(profile, dict) else ""
+        snippet = str(item.get("description", "") or "")
+        searchable_text = " ".join([title, snippet, url])
+        normalized.append(
+            {
+                "company_name": _infer_company_name(title, profile_name, url),
+                "job_title": title,
+                "location_text": searchable_text,
+                "workplace_type": _infer_workplace_type(searchable_text),
+                "source_url": url,
+                "job_url": url,
+                "snippet": snippet,
+                "evidence_kind": "brave_web_result",
+                "raw_payload": item,
+            }
+        )
+    return normalized
+
+
+def _infer_company_name(title: str, profile_name: str, url: str) -> str:
+    for separator in [" - ", " | ", " at "]:
+        if separator in title:
+            parts = [part.strip() for part in title.split(separator) if part.strip()]
+            if len(parts) >= 2:
+                return parts[-1]
+    if profile_name.strip():
+        return profile_name.strip()
+    host = url.split("//", 1)[-1].split("/", 1)[0]
+    return host.removeprefix("www.") or "Unknown Company"
+
+
+def _infer_workplace_type(text: str) -> str:
+    lowered = text.lower()
+    if "remote" in lowered:
+        return "remote"
+    if "hybrid" in lowered:
+        return "hybrid"
+    if "onsite" in lowered or "on-site" in lowered:
+        return "onsite"
+    return "unknown"
+
 def fetch_json_default(url: str) -> Any:
     return fetch_json_url(url)
+
+
+def fetch_json_for_source(url: str, source: CompanyDiscoverySourceDefinition) -> Any:
+    api_key_env = source.params.get("api_key_env")
+    if not api_key_env:
+        return fetch_json_url(url)
+    if not isinstance(api_key_env, str) or not api_key_env.strip():
+        raise ValueError("company discovery source params.api_key_env must be a non-empty string")
+    api_key = os.environ.get(api_key_env, "").strip()
+    if not api_key:
+        raise ValueError(f"{api_key_env} is required for {source.name}")
+    request = Request(
+        url,
+        headers={
+            "User-Agent": "JobTracker/0.1.0 (+https://local.jobtracker)",
+            "Accept": "application/json",
+            "X-Subscription-Token": api_key,
+        },
+    )
+    import json
+
+    with urlopen(request, timeout=15.0) as response:
+        return json.loads(response.read().decode("utf-8"))

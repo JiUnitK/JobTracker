@@ -18,6 +18,11 @@ def test_load_app_config_reads_default_files() -> None:
     assert any(
         source.name == "company_search" for source in config.company_discovery.sources
     )
+    company_search = next(
+        source for source in config.company_discovery.sources if source.name == "company_search"
+    )
+    assert company_search.params["api_key_env"] == "BRAVE_SEARCH_API_KEY"
+    assert "api.search.brave.com" in company_search.params["query_url_template"]
     assert config.job_search.settings.max_age_days == 7
     assert config.job_search.settings.include_unknown_age is False
     assert config.job_search.settings.query_templates

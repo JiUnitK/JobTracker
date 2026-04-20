@@ -19,16 +19,16 @@ Purpose:
 
 Default setup:
 
-- uses SerpAPI Google Jobs through `company_search.params.query_url_template`
-- requires `SERPAPI_KEY` in repo-root `.env`
+- uses Brave Search through `company_search.params.query_url_template`
+- requires `BRAVE_SEARCH_API_KEY` in repo-root `.env`
 
 Example `.env`:
 
 ```powershell
-SERPAPI_KEY=your_key_here
+BRAVE_SEARCH_API_KEY=your_key_here
 ```
 
-If you do not want to use SerpAPI yet, set `enabled: false` for `company_search` in `config/sources.yaml`.
+If you do not want to use Brave-backed company discovery yet, set `enabled: false` for `company_search` in `config/sources.yaml`.
 
 ### `remote_ok`
 
@@ -73,7 +73,7 @@ For day 1:
 
 - keep `remote_ok` enabled
 - keep `hn_whos_hiring` enabled
-- enable `company_search` only if `SERPAPI_KEY` is configured
+- enable `company_search` only if `BRAVE_SEARCH_API_KEY` is configured
 
 This keeps discovery automated while avoiding manual seed lists.
 

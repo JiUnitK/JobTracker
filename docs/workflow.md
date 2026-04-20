@@ -39,7 +39,7 @@ The daily workflow should be short, roughly 5-15 minutes.
 python -m jobtracker discover companies run
 ```
 
-Discovery can pull from RemoteOK, HN Who's Hiring, and SerpAPI Google Jobs depending on what is enabled under `discovery_sources` in [config/sources.yaml](/abs/path/F:/Projects/JobTracker/config/sources.yaml).
+Discovery can pull from RemoteOK, HN Who's Hiring, and Brave Search depending on what is enabled under `discovery_sources` in [config/sources.yaml](/abs/path/F:/Projects/JobTracker/config/sources.yaml).
 
 ### 2. Improve unresolved companies when needed
 
@@ -251,7 +251,7 @@ python -m jobtracker export markdown --output reports/weekly-jobs.md --limit 25
 At the end of the weekly review, update config based on what you learned:
 
 - disable sources that are too noisy
-- set `SERPAPI_KEY` if Google Jobs search would improve discovery
+- set `BRAVE_SEARCH_API_KEY` if Brave Search would improve discovery or instant search
 - use discovery promotion for ATS-backed companies you want monitored without manually editing source lists first
 - add or remove source identifiers in [config/sources.yaml](/abs/path/F:/Projects/JobTracker/config/sources.yaml) when you want broader direct tracked coverage
 - refine target titles and skills in [config/profile.yaml](/abs/path/F:/Projects/JobTracker/config/profile.yaml)

@@ -16,7 +16,7 @@ JobTracker already has:
 - a local-first Python CLI application
 - persistent storage, migrations, and test coverage
 - config split across search terms, sources, scoring, and profile files
-- autonomous company discovery from RemoteOK, HN Who's Hiring, and SerpAPI Google Jobs
+- autonomous company discovery from RemoteOK, HN Who's Hiring, and Brave Search
 - ATS fingerprinting for unresolved companies across Greenhouse, Lever, and Ashby
 - company scoring and ATS/careers resolution with ranked candidates
 - company review, promotion, ignore, and job drill-down flows
@@ -320,7 +320,7 @@ Keep maintaining:
 
 - source failure diagnostics
 - live fetch timeout and retry behavior
-- HN and SerpAPI parsing improvements
+- HN and Brave-backed search parsing improvements
 - inbox and review output polish
 - promotion into tracked ATS monitoring
 

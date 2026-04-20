@@ -19,7 +19,7 @@ JobTracker currently supports:
 - autonomous company discovery from live sources
 - RemoteOK discovery with no API key
 - Hacker News "Who is hiring?" discovery with no API key
-- SerpAPI Google Jobs discovery when `SERPAPI_KEY` is configured
+- Brave Search discovery when `BRAVE_SEARCH_API_KEY` is configured
 - ATS fingerprinting for unresolved companies across Greenhouse, Lever, and Ashby
 - company scoring and resolution status tracking
 - ranked ATS and careers-surface resolution targets
@@ -40,7 +40,7 @@ Today:
 - JobTracker can serve a local browser UI for instant search
 - JobTracker can discover companies from enabled discovery sources
 - RemoteOK and HN discovery can work without external accounts
-- SerpAPI search discovery works when `SERPAPI_KEY` is available in `.env`
+- Brave Search discovery works when `BRAVE_SEARCH_API_KEY` is available in `.env`
 - discovery review shows the best current ATS or careers target for each company candidate
 - unresolved companies can be fingerprinted against Greenhouse, Lever, and Ashby
 - promoted companies flow into tracked job monitoring automatically
@@ -63,18 +63,17 @@ This quick start is meant to be day 1 of a daily or weekly cadence.
 python -m pip install -e .[dev]
 ```
 
-### 2. Optional: configure API keys
+### 2. Optional: configure Brave Search
 
 RemoteOK and HN Who's Hiring do not require an API key.
 
-If you want instant open-web job search, add a Brave Search key. If you want Google Jobs company discovery too, add a SerpAPI key:
+If you want instant open-web job search and Brave-backed company discovery, add a Brave Search key:
 
 ```powershell
 BRAVE_SEARCH_API_KEY=your_key_here
-SERPAPI_KEY=your_key_here
 ```
 
-If you do not want to use SerpAPI yet, set `company_search.enabled: false` under `discovery_sources` in [config/sources.yaml](/abs/path/F:/Projects/JobTracker/config/sources.yaml).
+If you do not want to use Brave-backed company discovery yet, set `company_search.enabled: false` under `discovery_sources` in [config/sources.yaml](/abs/path/F:/Projects/JobTracker/config/sources.yaml). Instant search also uses the same `BRAVE_SEARCH_API_KEY`.
 
 ### 3. Validate config and create the database
 
@@ -117,7 +116,7 @@ The default discovery config can pull from:
 
 - `remote_ok`: RemoteOK public API
 - `hn_whos_hiring`: HN Algolia API for the monthly Who's Hiring thread
-- `company_search`: SerpAPI Google Jobs, when `SERPAPI_KEY` is set
+- `company_search`: Brave Search web results, when `BRAVE_SEARCH_API_KEY` is set
 
 ### 6. Improve unresolved companies with ATS fingerprinting
 
@@ -227,7 +226,7 @@ Tracked ATS source identifiers in [config/sources.yaml](/abs/path/F:/Projects/Jo
 
 Discovery sources live under `discovery_sources` in [config/sources.yaml](/abs/path/F:/Projects/JobTracker/config/sources.yaml):
 
-- `company_search`: SerpAPI Google Jobs through `query_url_template`, using `SERPAPI_KEY`
+- `company_search`: Brave Search web results through `query_url_template`, using `BRAVE_SEARCH_API_KEY`
 - `remote_ok`: RemoteOK public API at `https://remoteok.com/api`
 - `hn_whos_hiring`: HN Algolia API, auto-detecting the current monthly thread
 
