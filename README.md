@@ -90,6 +90,7 @@ python -m jobtracker search jobs
 python -m jobtracker search jobs --days 7 --query "customer success" --location Remote --limit 25
 python -m jobtracker search jobs --include-unknown-age
 python -m jobtracker search jobs --json
+python -m jobtracker search jobs --markdown-output reports/instant-jobs.md
 ```
 
 This workflow uses [config/search_terms.yaml](/abs/path/F:/Projects/JobTracker/config/search_terms.yaml), [config/sources.yaml](/abs/path/F:/Projects/JobTracker/config/sources.yaml), and [config/profile.yaml](/abs/path/F:/Projects/JobTracker/config/profile.yaml). It returns structured results and does not write to the database by default.
@@ -225,12 +226,24 @@ Discovery queries live under `discovery_queries` in [config/search_terms.yaml](/
 
 Instant search sources live under `instant_search_sources` in [config/sources.yaml](/abs/path/F:/Projects/JobTracker/config/sources.yaml). Instant search query defaults live under `instant_job_search` in [config/search_terms.yaml](/abs/path/F:/Projects/JobTracker/config/search_terms.yaml).
 
+Instant search planning supports:
+
+- `instant_job_search.queries` for explicit role/search phrases
+- `instant_job_search.query_templates` for rendered Brave queries
+- `{query}`, `{location}`, `{workplace_terms}`, and `{job_intent}` template placeholders
+- automatic job-intent fallback terms when a custom template does not mention jobs, careers, applications, or posting age
+
+Freshness filtering is intentionally conservative. Results with explicit posting dates or relative age text are classified with `high`, `medium`, or `low` confidence. Results with no usable age signal are excluded by default and can be included with `--include-unknown-age`.
+
+Instant search scoring ranks title, keyword, skill, location, workplace, seniority, freshness, source, and job-page signals. The CLI shows concise `Why:` reasons, and `--markdown-output` writes the same structured result set as a review table.
+
 Profile tuning lives in [config/profile.yaml](/abs/path/F:/Projects/JobTracker/config/profile.yaml).
 
 ## Useful Commands
 
 ```powershell
 python -m jobtracker search jobs
+python -m jobtracker search jobs --markdown-output reports/instant-jobs.md
 python -m jobtracker discover companies run
 python -m jobtracker discover companies fingerprint
 python -m jobtracker discover companies inbox

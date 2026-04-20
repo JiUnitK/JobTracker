@@ -9,6 +9,7 @@ from jobtracker.job_search.brave_adapter import BraveSearchError
 from jobtracker.job_search.planner import JobSearchOverrides
 from jobtracker.job_search.reporting import (
     format_instant_job_search_json,
+    format_instant_job_search_markdown,
     format_instant_job_search_summary,
 )
 from jobtracker.job_search.runner import InstantJobSearchRunner
@@ -39,6 +40,14 @@ def search_jobs(
         help="Include results whose posting age cannot be verified.",
     ),
     json_output: bool = typer.Option(False, "--json", help="Output structured JSON."),
+    markdown_output: Path | None = typer.Option(
+        None,
+        "--markdown-output",
+        file_okay=True,
+        dir_okay=False,
+        resolve_path=True,
+        help="Write a Markdown review report to this path.",
+    ),
 ) -> None:
     """Search the open web for fresh matching job postings."""
     app_config = load_app_config(config_dir)
@@ -55,6 +64,12 @@ def search_jobs(
         )
     except (BraveSearchError, ValueError) as exc:
         raise typer.BadParameter(str(exc)) from exc
+    if markdown_output is not None:
+        markdown_output.parent.mkdir(parents=True, exist_ok=True)
+        markdown_output.write_text(
+            format_instant_job_search_markdown(summary),
+            encoding="utf-8",
+        )
     if json_output:
         typer.echo(format_instant_job_search_json(summary))
         return

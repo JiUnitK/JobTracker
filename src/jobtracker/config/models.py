@@ -16,13 +16,16 @@ InstantSearchSourceType = Literal["search"]
 class InstantJobSearchConfig(BaseModel):
     max_age_days: int = 7
     include_unknown_age: bool = False
+    queries: list[str] = Field(default_factory=list)
     query_templates: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def validate_search_settings(self) -> "InstantJobSearchConfig":
         if self.max_age_days < 1:
             raise ValueError("instant_job_search.max_age_days must be at least 1")
+        cleaned_queries = [item.strip() for item in self.queries if item.strip()]
         cleaned_templates = [item.strip() for item in self.query_templates if item.strip()]
+        self.queries = cleaned_queries
         self.query_templates = cleaned_templates
         return self
 

@@ -37,3 +37,49 @@ def format_instant_job_search_summary(summary: InstantJobSearchRunSummary) -> st
 
 def format_instant_job_search_json(summary: InstantJobSearchRunSummary) -> str:
     return json.dumps(summary.model_dump(mode="json"), indent=2)
+
+
+def format_instant_job_search_markdown(summary: InstantJobSearchRunSummary) -> str:
+    lines = [
+        "# Instant Job Search",
+        "",
+        f"Max age: {summary.max_age_days} days",
+        f"Results: {len(summary.results)}",
+        f"Skipped for age: {summary.skipped_for_age}",
+        f"Skipped for relevance: {summary.skipped_for_relevance}",
+        "",
+    ]
+    if not summary.results:
+        lines.append("No matching jobs found.")
+        return "\n".join(lines).rstrip() + "\n"
+
+    lines.extend(
+        [
+            "| Rank | Title | Company | Location | Age | Score | Why | URL |",
+            "| --- | --- | --- | --- | --- | ---: | --- | --- |",
+        ]
+    )
+    for index, result in enumerate(summary.results, start=1):
+        age_text = result.age_text or (
+            f"{result.age_days} days old" if result.age_days is not None else "age unknown"
+        )
+        lines.append(
+            " | ".join(
+                [
+                    f"| {index}",
+                    _md(result.title),
+                    _md(result.company or "Unknown company"),
+                    _md(result.location or result.workplace_type or "-"),
+                    _md(age_text),
+                    str(result.score),
+                    _md(", ".join(result.reasons) or "-"),
+                    str(result.url),
+                ]
+            )
+            + " |"
+        )
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def _md(value: str) -> str:
+    return value.replace("|", "\\|").replace("\n", " ").strip()

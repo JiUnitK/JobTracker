@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from pathlib import Path
+from uuid import uuid4
+
 from typer.testing import CliRunner
 
 from jobtracker.cli import job_search as cli_job_search
@@ -58,6 +61,25 @@ def test_search_jobs_command_outputs_json(monkeypatch) -> None:
     assert result.exit_code == 0
     assert '"results"' in result.stdout
     assert '"Customer Success Specialist"' in result.stdout
+
+
+def test_search_jobs_command_writes_markdown(monkeypatch) -> None:
+    monkeypatch.setattr(cli_job_search, "InstantJobSearchRunner", lambda: FakeRunner())
+    scratch_dir = Path(".tmp") / "tests"
+    scratch_dir.mkdir(parents=True, exist_ok=True)
+    output = scratch_dir / f"instant-jobs-{uuid4().hex}.md"
+
+    try:
+        result = runner.invoke(app, ["search", "jobs", "--markdown-output", str(output)])
+
+        assert result.exit_code == 0
+        text = output.read_text(encoding="utf-8")
+        assert "# Instant Job Search" in text
+        assert "Customer Success Specialist" in text
+        assert "title match, remote" in text
+    finally:
+        if output.exists():
+            output.unlink()
 
 
 def test_search_jobs_command_reports_adapter_errors(monkeypatch) -> None:

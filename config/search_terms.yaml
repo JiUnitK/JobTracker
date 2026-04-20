@@ -21,12 +21,13 @@ seniority:
 instant_job_search:
   max_age_days: 7
   include_unknown_age: false
+  queries: []
   query_templates:
-    - '"{query}" "{location}" job apply posted'
-    - '"{query}" "{location}" careers recently posted'
-    - 'site:greenhouse.io "{query}" "{location}"'
-    - 'site:jobs.lever.co "{query}" "{location}"'
-    - 'site:jobs.ashbyhq.com "{query}" "{location}"'
+    - '"{query}" "{location}" {workplace_terms} {job_intent}'
+    - '"{query}" "{location}" careers recently posted {workplace_terms}'
+    - 'site:greenhouse.io "{query}" "{location}" {workplace_terms}'
+    - 'site:jobs.lever.co "{query}" "{location}" {workplace_terms}'
+    - 'site:jobs.ashbyhq.com "{query}" "{location}" {workplace_terms}'
 discovery_queries:
   - keywords:
       - software engineer

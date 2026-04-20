@@ -8,9 +8,14 @@ from jobtracker.models import WorkplaceType
 
 
 DEFAULT_QUERY_TEMPLATES = [
-    '"{query}" "{location}" job apply posted',
-    '"{query}" "{location}" careers recently posted',
+    '"{query}" "{location}" {workplace_terms} {job_intent}',
+    '"{query}" "{location}" careers recently posted {workplace_terms}',
+    'site:greenhouse.io "{query}" "{location}" {workplace_terms}',
+    'site:jobs.lever.co "{query}" "{location}" {workplace_terms}',
+    'site:jobs.ashbyhq.com "{query}" "{location}" {workplace_terms}',
 ]
+JOB_INTENT_TERMS = ["job", "apply", "careers", "posted"]
+JOB_INTENT_TEXT = " ".join(JOB_INTENT_TERMS)
 
 
 @dataclass(frozen=True, slots=True)
@@ -63,7 +68,11 @@ def build_instant_job_search_request(
 def _query_terms(app_config: AppConfig, override_query: str | None) -> list[str]:
     if override_query and override_query.strip():
         return [override_query.strip()]
-    values = app_config.search_terms.include or app_config.profile.target_titles
+    values = (
+        app_config.job_search.settings.queries
+        or app_config.search_terms.include
+        or app_config.profile.target_titles
+    )
     cleaned = [value.strip() for value in values if value.strip()]
     if not cleaned:
         raise ValueError("At least one include term or profile target title is required")
@@ -95,13 +104,16 @@ def _expand_templates(
     workplace_types: list[WorkplaceType],
 ) -> list[InstantJobSearchQuery]:
     planned: list[InstantJobSearchQuery] = []
+    workplace_terms = _workplace_terms(workplace_types)
     for template in templates:
         rendered = template.format(
             query=query,
             location=location,
-            workplace_type=" ".join(workplace_types),
+            workplace_type=workplace_terms,
+            workplace_terms=workplace_terms,
+            job_intent=JOB_INTENT_TEXT,
         )
-        rendered = " ".join(rendered.split())
+        rendered = _ensure_job_intent(" ".join(rendered.split()))
         if not rendered:
             continue
         planned.append(
@@ -113,3 +125,17 @@ def _expand_templates(
         )
     return planned
 
+
+def _workplace_terms(workplace_types: list[WorkplaceType]) -> str:
+    terms = [item for item in workplace_types if item in {"remote", "hybrid", "onsite"}]
+    if not terms:
+        return ""
+    expanded = ["on-site" if item == "onsite" else item for item in terms]
+    return " ".join(expanded)
+
+
+def _ensure_job_intent(query: str) -> str:
+    lowered = query.lower()
+    if any(term in lowered for term in JOB_INTENT_TERMS):
+        return query
+    return f"{query} {JOB_INTENT_TEXT}".strip()

@@ -56,7 +56,7 @@ class InstantJobSearchRunner:
 
         summary.results = sorted(
             results_by_key.values(),
-            key=lambda item: (item.score, -(item.age_days or 10_000)),
+            key=lambda item: (item.score, _freshness_sort_value(item.age_days)),
             reverse=True,
         )[: request.limit]
         return summary
@@ -70,3 +70,9 @@ def _should_skip_for_age(
     if result.age_days is None:
         return not include_unknown_age
     return result.age_days > max_age_days
+
+
+def _freshness_sort_value(age_days: int | None) -> int:
+    if age_days is None:
+        return -10_000
+    return -age_days

@@ -59,6 +59,7 @@ def test_instant_job_search_config_cleans_blank_query_templates() -> None:
             "instant_job_search": {
                 "max_age_days": 14,
                 "include_unknown_age": True,
+                "queries": [" customer success ", " ", ""],
                 "query_templates": [" {query} job ", " ", ""],
             },
         }
@@ -66,4 +67,5 @@ def test_instant_job_search_config_cleans_blank_query_templates() -> None:
 
     assert config.instant_job_search.max_age_days == 14
     assert config.instant_job_search.include_unknown_age is True
+    assert config.instant_job_search.queries == ["customer success"]
     assert config.instant_job_search.query_templates == ["{query} job"]

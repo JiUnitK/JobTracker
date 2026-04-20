@@ -164,6 +164,14 @@ Objective:
 
 Generate useful job-search queries for non-tech and tech roles from local config.
 
+Status:
+
+- Added explicit `instant_job_search.queries` support for users who want hand-tuned search phrases instead of only global include terms.
+- Query planning now combines configured search phrases, locations, workplace preferences, and templates into structured `InstantJobSearchQuery` objects.
+- Added `{workplace_terms}` and `{job_intent}` template placeholders; custom templates that omit job-intent terms get a safe fallback.
+- Default planning includes general job-intent queries and targeted Greenhouse, Lever, and Ashby site queries without requiring ATS parsing in the instant-search workflow.
+- Added tests for CLI overrides, explicit configured queries, non-tech searches, workplace terms, job-intent fallback, and ATS-targeted templates.
+
 Focus:
 
 - combine configured keywords, locations, workplace types, and query templates
@@ -177,6 +185,14 @@ Focus:
 Objective:
 
 Honor "postings no older than x days" as honestly as possible.
+
+Status:
+
+- Expanded age classification to use `published_at`, relative age text, explicit dates in snippets/titles, and date-like URL path/query signals.
+- Classifies age confidence as `high`, `medium`, `low`, or `unknown` based on the source of the signal.
+- Strict freshness excludes unknown-age postings by default and includes them only with `--include-unknown-age`.
+- CLI output already shows skipped age/relevance counts and labels unknown-age results as `age unknown` when included.
+- Added tests for exact dates, relative age, URL-derived dates, unknown-age classification, and include/exclude filtering.
 
 Focus:
 
@@ -195,6 +211,14 @@ Search results do not always expose posting age. V1 should be transparent about 
 Objective:
 
 Surface a small set of results that feel immediately useful.
+
+Status:
+
+- Expanded instant-search relevance scoring across title strength, configured keywords, preferred skills, location/workplace, seniority, freshness confidence, source quality, and job-page signals.
+- Scoring now emits concise user-facing `Why:` reasons such as strong title match, matched skills, remote workplace, recent posting, ATS source, and age unknown.
+- JSON output remains structured for integration and GUI work.
+- Added `--markdown-output` for instant-search review reports without adding database writes.
+- Added focused tests for scoring signals, exclusions, unknown-age reasons, Markdown formatting, and CLI Markdown export.
 
 Focus:
 

@@ -46,6 +46,24 @@ class FixtureAdapter(InstantJobSearchAdapter):
         ]
 
 
+class UnknownAgeAdapter(InstantJobSearchAdapter):
+    source_name = "brave_search"
+
+    def search(
+        self,
+        source: InstantSearchSourceDefinition,
+        query: InstantJobSearchQuery,
+    ) -> list[RawInstantSearchResult]:
+        return [
+            RawInstantSearchResult(
+                source_id="unknown-age",
+                title="Backend Engineer - Mystery Co",
+                url="https://example.com/jobs/mystery",
+                snippet="Remote Python role",
+            )
+        ]
+
+
 def test_runner_returns_ranked_structured_results_without_database_writes() -> None:
     app_config = load_app_config(Path("config"))
     registry = InstantJobSearchRegistry()
@@ -66,6 +84,43 @@ def test_runner_returns_ranked_structured_results_without_database_writes() -> N
     assert summary.results[0].score > 0
 
 
+def test_runner_excludes_unknown_age_by_default() -> None:
+    app_config = load_app_config(Path("config"))
+    registry = InstantJobSearchRegistry()
+    registry.register(UnknownAgeAdapter())
+
+    summary = InstantJobSearchRunner(registry).run(
+        app_config,
+        JobSearchOverrides(query="backend engineer", location="Remote", max_age_days=7),
+        now=datetime(2026, 4, 20, tzinfo=timezone.utc),
+    )
+
+    assert summary.total_raw_results >= 1
+    assert summary.skipped_for_age >= 1
+    assert summary.results == []
+
+
+def test_runner_includes_unknown_age_when_requested() -> None:
+    app_config = load_app_config(Path("config"))
+    registry = InstantJobSearchRegistry()
+    registry.register(UnknownAgeAdapter())
+
+    summary = InstantJobSearchRunner(registry).run(
+        app_config,
+        JobSearchOverrides(
+            query="backend engineer",
+            location="Remote",
+            max_age_days=7,
+            include_unknown_age=True,
+        ),
+        now=datetime(2026, 4, 20, tzinfo=timezone.utc),
+    )
+
+    assert summary.skipped_for_age == 0
+    assert len(summary.results) == 1
+    assert summary.results[0].age_confidence == "unknown"
+
+
 def test_human_summary_includes_freshness_and_reasons() -> None:
     app_config = load_app_config(Path("config"))
     registry = InstantJobSearchRegistry()
@@ -82,3 +137,21 @@ def test_human_summary_includes_freshness_and_reasons() -> None:
     assert "Backend Engineer" in output
     assert "Why:" in output
 
+
+def test_human_summary_is_transparent_about_unknown_age() -> None:
+    app_config = load_app_config(Path("config"))
+    registry = InstantJobSearchRegistry()
+    registry.register(UnknownAgeAdapter())
+    summary = InstantJobSearchRunner(registry).run(
+        app_config,
+        JobSearchOverrides(
+            query="backend engineer",
+            location="Remote",
+            max_age_days=7,
+            include_unknown_age=True,
+        ),
+    )
+
+    output = format_instant_job_search_summary(summary)
+
+    assert "age unknown" in output
