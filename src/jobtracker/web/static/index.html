@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>JobTracker</title>
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="toolbar" aria-label="Instant job search">
+        <div class="brand">
+          <h1>JobTracker</h1>
+          <p id="sourceStatus">Instant search</p>
+        </div>
+        <form id="searchForm" class="search-form">
+          <label>
+            <span>Role</span>
+            <input id="queryInput" name="query" type="search" autocomplete="off">
+          </label>
+          <label>
+            <span>Location</span>
+            <input id="locationInput" name="location" type="search" autocomplete="off">
+          </label>
+          <label class="compact">
+            <span>Days</span>
+            <input id="daysInput" name="days" type="number" min="1" max="90">
+          </label>
+          <label class="compact">
+            <span>Limit</span>
+            <input id="limitInput" name="limit" type="number" min="1" max="100" value="25">
+          </label>
+          <label class="toggle">
+            <input id="unknownInput" name="include_unknown_age" type="checkbox">
+            <span>Unknown age</span>
+          </label>
+          <button id="searchButton" type="submit">Search</button>
+        </form>
+      </section>
+
+      <section class="summary" aria-label="Search summary">
+        <div>
+          <span>Results</span>
+          <strong id="resultCount">0</strong>
+        </div>
+        <div>
+          <span>Max age</span>
+          <strong id="maxAge">-</strong>
+        </div>
+        <div>
+          <span>Skipped age</span>
+          <strong id="skippedAge">0</strong>
+        </div>
+        <div>
+          <span>Skipped fit</span>
+          <strong id="skippedFit">0</strong>
+        </div>
+        <button id="markdownButton" type="button" disabled>Markdown</button>
+      </section>
+
+      <p id="statusMessage" class="status" role="status"></p>
+
+      <section class="results-wrap" aria-label="Ranked results">
+        <table>
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Role</th>
+              <th>Company</th>
+              <th>Location</th>
+              <th>Age</th>
+              <th>Score</th>
+              <th>Why</th>
+              <th>Open</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody"></tbody>
+        </table>
+      </section>
+    </main>
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>
+

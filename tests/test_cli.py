@@ -15,6 +15,13 @@ def test_cli_help_smoke() -> None:
     assert "Track job opportunities" in result.stdout
 
 
+def test_web_command_help_smoke() -> None:
+    result = runner.invoke(app, ["web", "--help"])
+
+    assert result.exit_code == 0
+    assert "Start the local browser UI" in result.stdout
+
+
 def test_config_validate_command_uses_default_config() -> None:
     result = runner.invoke(app, ["config", "validate"])
 

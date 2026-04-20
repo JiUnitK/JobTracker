@@ -54,9 +54,14 @@ Shared infrastructure belongs in these packages:
 - `jobtracker.storage`: persistence, ORM models, migrations, and repositories
 - `jobtracker.reporting`: reporting over persisted tracked and discovery data
 - `jobtracker.cli`: CLI command registration and command-specific formatting
+- `jobtracker.web`: local browser UI, HTTP request/response adaptation, and static assets
 
 Workflow-specific request/result models should stay in their workflow package
 unless they are clearly stable across workflows.
+
+`jobtracker.web` should not own search, scoring, normalization, discovery, or persistence
+logic. It should call workflow services such as `jobtracker.job_search.runner` and adapt
+their typed results for browser use.
 
 ## Compatibility Shims
 

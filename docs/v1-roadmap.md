@@ -234,6 +234,14 @@ Objective:
 
 Prepare the instant-search implementation for a local browser GUI, then build the first usable GUI around it.
 
+Status:
+
+- Added a `jobtracker.web` package with FastAPI routes, typed web request/config schemas, and static HTML/CSS/JS assets.
+- Added `python -m jobtracker web` to start the local browser UI on `http://127.0.0.1:8765` by default.
+- Added `/api/config/summary` for UI defaults and `/api/search/jobs` for structured instant-search results.
+- The web API adapts requests into `JobSearchOverrides` and calls `InstantJobSearchRunner`; search logic remains in `jobtracker.job_search`.
+- Added route tests for config summary, successful search, error responses, and static asset serving.
+
 Chosen direction:
 
 - Build a small local web app.

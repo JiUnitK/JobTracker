@@ -15,6 +15,7 @@ The intended user journey is:
 JobTracker currently supports:
 
 - instant open-web job search through Brave Search when `BRAVE_SEARCH_API_KEY` is configured
+- local browser UI for instant job search
 - autonomous company discovery from live sources
 - RemoteOK discovery with no API key
 - Hacker News "Who is hiring?" discovery with no API key
@@ -36,6 +37,7 @@ The company-first workflow is in place and autonomous discovery is now the front
 Today:
 
 - JobTracker can run a side-effect-light instant search for fresh postings without writing to the database
+- JobTracker can serve a local browser UI for instant search
 - JobTracker can discover companies from enabled discovery sources
 - RemoteOK and HN discovery can work without external accounts
 - SerpAPI search discovery works when `SERPAPI_KEY` is available in `.env`
@@ -91,9 +93,16 @@ python -m jobtracker search jobs --days 7 --query "customer success" --location 
 python -m jobtracker search jobs --include-unknown-age
 python -m jobtracker search jobs --json
 python -m jobtracker search jobs --markdown-output reports/instant-jobs.md
+python -m jobtracker web
 ```
 
 This workflow uses [config/search_terms.yaml](/abs/path/F:/Projects/JobTracker/config/search_terms.yaml), [config/sources.yaml](/abs/path/F:/Projects/JobTracker/config/sources.yaml), and [config/profile.yaml](/abs/path/F:/Projects/JobTracker/config/profile.yaml). It returns structured results and does not write to the database by default.
+
+The local browser UI serves the same workflow at [http://127.0.0.1:8765](http://127.0.0.1:8765):
+
+```powershell
+python -m jobtracker web
+```
 
 ### 5. Run autonomous company discovery
 
@@ -244,6 +253,7 @@ Profile tuning lives in [config/profile.yaml](/abs/path/F:/Projects/JobTracker/c
 ```powershell
 python -m jobtracker search jobs
 python -m jobtracker search jobs --markdown-output reports/instant-jobs.md
+python -m jobtracker web
 python -m jobtracker discover companies run
 python -m jobtracker discover companies fingerprint
 python -m jobtracker discover companies inbox

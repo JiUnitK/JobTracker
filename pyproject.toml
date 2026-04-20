@@ -14,11 +14,14 @@ dependencies = [
   "SQLAlchemy>=2.0,<3.0",
   "alembic>=1.18,<2.0",
   "typer>=0.24,<1.0",
+  "fastapi>=0.136,<1.0",
+  "uvicorn>=0.44,<1.0",
 ]
 
 [project.optional-dependencies]
 dev = [
   "pytest>=9.0,<10.0",
+  "httpx>=0.28,<1.0",
 ]
 
 [project.scripts]
@@ -29,6 +32,9 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"jobtracker.web" = ["static/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

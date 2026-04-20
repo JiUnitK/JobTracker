@@ -43,5 +43,24 @@ def version() -> None:
     typer.echo(f"jobtracker {__version__}")
 
 
+@app.command("web")
+def run_web(
+    config_dir: str = typer.Option(
+        "config",
+        "--config-dir",
+        help="Directory containing JobTracker YAML config files.",
+    ),
+    host: str = typer.Option("127.0.0.1", "--host", help="Host interface for the local web UI."),
+    port: int = typer.Option(8765, "--port", help="Port for the local web UI."),
+) -> None:
+    """Start the local browser UI."""
+    import uvicorn
+
+    from jobtracker.web.app import create_app
+
+    typer.echo(f"Starting JobTracker web UI at http://{host}:{port}")
+    uvicorn.run(create_app(config_dir=config_dir), host=host, port=port)
+
+
 def main() -> None:
     app()
