@@ -57,17 +57,39 @@ The next work is tracked in [docs/v1-roadmap.md](/abs/path/F:/Projects/JobTracke
 
 This quick start is meant to be day 1 of a daily or weekly cadence.
 
-### 1. Install the project
+### Plug-and-play GUI
+
+On Windows, double-click:
+
+```text
+Start-JobTracker.bat
+```
+
+Or run the PowerShell launcher directly:
+
+```powershell
+.\Start-JobTracker.ps1
+```
+
+The launcher creates `.venv`, installs JobTracker, prompts for `BRAVE_SEARCH_API_KEY` if `.env` does not already have one, starts the local web server, and opens the browser. If Python 3.12+ is not installed, it can offer to install Python 3.12 through `winget`.
+
+Useful launcher options:
+
+```powershell
+.\Start-JobTracker.ps1 -Port 8766
+.\Start-JobTracker.ps1 -NoOpen
+.\Start-JobTracker.ps1 -Refresh
+```
+
+### Manual Setup
+
+If you prefer to run the project manually:
 
 ```powershell
 python -m pip install -e .[dev]
 ```
 
-### 2. Optional: configure Brave Search
-
-RemoteOK and HN Who's Hiring do not require an API key.
-
-If you want instant open-web job search and Brave-backed company discovery, add a Brave Search key:
+RemoteOK and HN Who's Hiring do not require an API key. Instant open-web job search and Brave-backed company discovery require this line in `.env`:
 
 ```powershell
 BRAVE_SEARCH_API_KEY=your_key_here
@@ -75,14 +97,14 @@ BRAVE_SEARCH_API_KEY=your_key_here
 
 If you do not want to use Brave-backed company discovery yet, set `company_search.enabled: false` under `discovery_sources` in [config/sources.yaml](/abs/path/F:/Projects/JobTracker/config/sources.yaml). Instant search also uses the same `BRAVE_SEARCH_API_KEY`.
 
-### 3. Validate config and create the database
+Validate config and create the database:
 
 ```powershell
 python -m jobtracker config validate
 python -m jobtracker db upgrade
 ```
 
-### 4. Search fresh postings now
+### Search fresh postings now
 
 Instant job search is the fastest front door when you want current postings without building a company watchlist first:
 
@@ -104,7 +126,7 @@ The local browser UI serves the same workflow at [http://127.0.0.1:8765](http://
 python -m jobtracker web
 ```
 
-### 5. Run autonomous company discovery
+### Run autonomous company discovery
 
 ```powershell
 python -m jobtracker discover companies run
@@ -119,7 +141,7 @@ The default discovery config can pull from:
 - `hn_whos_hiring`: HN Algolia API for the monthly Who's Hiring thread
 - `company_search`: Brave Search web results, when `BRAVE_SEARCH_API_KEY` is set
 
-### 6. Improve unresolved companies with ATS fingerprinting
+### Improve unresolved companies with ATS fingerprinting
 
 If the inbox contains promising companies with `resolution=unresolved`, run:
 

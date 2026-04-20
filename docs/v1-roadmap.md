@@ -314,6 +314,47 @@ Delivery steps:
 5. Build the static frontend as the first screen, not a landing page.
 6. Add tests for route success, missing API-key/error responses, static asset serving, and basic browser rendering.
 
+### 7. Plug-And-Play Windows Launch
+
+Objective:
+
+Make first-run setup and repeat GUI launch feel like one action for Windows users.
+
+Status:
+
+- Added `Start-JobTracker.bat` as the double-click entry point.
+- Added `Start-JobTracker.ps1` for the real setup and run logic.
+- The launcher checks for Python 3.12+, offers to install Python 3.12 through `winget` when Python is missing, creates `.venv`, installs JobTracker with `pip install -e .`, prompts for `BRAVE_SEARCH_API_KEY` when `.env` does not have one, picks an open local port, starts the local web UI, and opens the browser.
+- Added launcher options for `-Port`, `-NoOpen`, and `-Refresh`.
+
+Chosen direction:
+
+- Keep the batch file tiny and user-facing.
+- Keep setup logic in PowerShell because dependency checks, `.env` updates, port selection, server startup, and browser launch are clearer there than in batch.
+- Keep the launcher local-first and avoid writing secrets anywhere except repo-root `.env`.
+
+Target user flow:
+
+```text
+Double-click Start-JobTracker.bat
+```
+
+or:
+
+```powershell
+.\Start-JobTracker.ps1
+```
+
+Delivery steps:
+
+1. Add the double-click `.bat` wrapper.
+2. Add the PowerShell launcher.
+3. Detect Python 3.12+ and offer `winget` installation when missing.
+4. Create/reuse `.venv` and install dependencies.
+5. Prompt for and persist `BRAVE_SEARCH_API_KEY` only when missing.
+6. Start the web server on an open local port and open the browser.
+7. Document first-run and repeat-run behavior.
+
 ## Company-First Workflow Maintenance
 
 The company-first workflow remains valuable, but it is no longer the next product expansion.
@@ -348,4 +389,5 @@ Before a roadmap item is considered done:
 4. Add `python -m jobtracker search jobs` with CLI overrides for days, query, location, limit, JSON, and unknown-age handling.
 5. Implement age filtering, relevance scoring, and concise CLI reporting.
 6. Finish GUI readiness and implement the local FastAPI/static HTML browser UI.
-7. Re-run the workflow with non-tech search terms and tune query templates based on result quality.
+7. Add plug-and-play Windows launch for first-run setup and repeat GUI use.
+8. Re-run the workflow with non-tech search terms and tune query templates based on result quality.
